@@ -1,6 +1,8 @@
 cur_frm.add_fetch('leave_type', 'leave_type', 'leave_type_name');
 frappe.ui.form.on("Leave Application", {
 	refresh:function(frm){
+		console.log(frm);
+        
 		//set leave status change button
 		// frm.toggle_display("recommended_", false);
 		// frm.toggle_display("not_recommonded", false);
@@ -119,11 +121,12 @@ frappe.ui.form.on("Leave Application", {
 								fieldname: ["name","from_date","to_date","vacation_leave_type"]
 							},
 							callback: function(r){
-								if(!data.name){
+								if(!r.name){
 									frappe.msgprint(__("Your Leave Dates are out of the vacation  ."));
 									frm.set_value("to_date", "")
 									frm.set_value("from_date","");
 									frm.set_value("leave_type","");
+									frm.set_value("total_leave_days","");
 								}
 								
 							}
@@ -254,10 +257,24 @@ frappe.ui.form.on("Leave Application", {
 						}
 					});
 
+					
 					if(Delegate_to == frappe.session.user || frm.doc.leave_recommender==frappe.session.user){
 						//frm.toggle_display("recommender_first",true);
-						frm.toggle_display("recommended_", true);
-						frm.toggle_display("not_recommonded", true);
+						if(frm.doc.recommender_first==1){
+							frm.toggle_display("recommended_", true);
+							frm.toggle_display("not_recommonded", false);
+							frm.remove_custom_button('recommended_');
+							document.querySelectorAll("[data-fieldname='recommended_']")[1].style.backgroundColor="green";
+						}else if(frm.doc.status=="Rejected"){
+							frm.toggle_display("recommended_", false);
+							frm.toggle_display("not_recommonded", true);
+							document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.backgroundColor="red";
+						}else{
+                            frm.toggle_display("recommended_", true);
+							frm.toggle_display("not_recommonded", true);
+							document.querySelectorAll("[data-fieldname='recommended_']")[1].style.backgroundColor="#2490ef";
+							document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.backgroundColor="#2490ef";
+						}
 					}
 				}
 
@@ -280,8 +297,21 @@ frappe.ui.form.on("Leave Application", {
 
 					if(Delegate_to && Delegate_to == frappe.session.user || frm.doc.leave_recommender_second == frappe.session.user){
 						//frm.toggle_display("recommender_second",true);
-						frm.toggle_display("recommended_", true);
-						frm.toggle_display("not_recommonded", true);
+						if(frm.doc.recommender_second==1){
+							frm.toggle_display("recommended_", true);
+							frm.toggle_display("not_recommonded", false);
+							frm.remove_custom_button('recommended_');
+							document.querySelectorAll("[data-fieldname='recommended_']")[1].style.backgroundColor="green";
+						}else if(frm.doc.status=="Rejected"){
+							frm.toggle_display("recommended_", false);
+							frm.toggle_display("not_recommonded", true);
+							document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.backgroundColor="red";
+						}else{
+							frm.toggle_display("recommended_", true);
+							frm.toggle_display("not_recommonded", true);
+							document.querySelectorAll("[data-fieldname='recommended_']")[1].style.backgroundColor="#2490ef";
+							document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.backgroundColor="#2490ef";
+					    }
 					}
 				}
 
@@ -303,9 +333,20 @@ frappe.ui.form.on("Leave Application", {
 
 					if(Delegate_to && Delegate_to == frappe.session.user || frm.doc.leave_recommender_third == frappe.session.user){
 						//frm.toggle_display("recommender_third",true);
-						frm.toggle_display("recommended_", true);
-						frm.toggle_display("not_recommonded", true);
-
+						if(frm.doc.recommender_third==1){
+							frm.toggle_display("recommended_", true);
+							frm.toggle_display("not_recommonded", false);
+							document.querySelectorAll("[data-fieldname='recommended_']")[1].style.backgroundColor="green";
+						}else if(frm.doc.status=="Rejected"){
+							frm.toggle_display("recommended_", false);
+							frm.toggle_display("not_recommonded", true);
+							document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.backgroundColor="red";
+						}else{
+							frm.toggle_display("recommended_", true);
+							frm.toggle_display("not_recommonded", true);
+							document.querySelectorAll("[data-fieldname='recommended_']")[1].style.backgroundColor="#2490ef";
+							document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.backgroundColor="#2490ef";
+						}
 					}
 				}
 
@@ -313,7 +354,7 @@ frappe.ui.form.on("Leave Application", {
 		
 				if(frm.doc.leave_approver){
 					var leave_approver = frm.doc.leave_approver;
-					var Delegate_to;
+					var Delegate_to="";
 					frappe.call({
 						method: "admin_iiti.overrides.check_delegate",
 						async: false,
@@ -325,11 +366,23 @@ frappe.ui.form.on("Leave Application", {
 						}
 					});
 
-					if(Delegate_to && Delegate_to == frappe.session.user || frm.doc.leave_recommender_third == frappe.session.user){
-						frm.set_df_property('status', 'options', ['Approved', 'Rejected','Cancelled'])
-						//frm.toggle_display("recommender_third",true);
-						frm.toggle_display("approved", true);
-						frm.toggle_display("not_approved", true);
+					if(Delegate_to == frappe.session.user || frm.doc.leave_approver == frappe.session.user){
+						if(frm.doc.status=="Approved"){
+							frm.toggle_display("approved", true);
+							frm.toggle_display("not_approved", false);
+							document.querySelectorAll("[data-fieldname='approved']")[1].style.backgroundColor="green";
+						}else if(frm.doc.status=="Rejected"){
+							frm.toggle_display("approved", false);
+							frm.toggle_display("not_approved", true);
+							document.querySelectorAll("[data-fieldname='not_approved']")[1].style.backgroundColor="red";
+						}else{
+							frm.set_df_property('status', 'options', ['Approved', 'Rejected','Cancelled'])
+							//frm.toggle_display("recommender_third",true);
+							frm.toggle_display("approved", true);
+							frm.toggle_display("not_approved", true);
+							document.querySelectorAll("[data-fieldname='approved']")[1].style.backgroundColor="#2490ef";
+							document.querySelectorAll("[data-fieldname='not_approved']")[1].style.backgroundColor="#2490ef";
+						}
 					}
 				}
 
@@ -525,7 +578,7 @@ function change_leave_status(frm,leave_application_name,action_type,total_recomm
 				}else if(r.message=='approved'){
 					frappe.msgprint('You have approved successfully');
 				}
-				location.reload();				
+				//location.reload();				
 			}
 		});
 	}

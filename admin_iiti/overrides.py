@@ -719,17 +719,17 @@ def set_leave_status(leave_application_name,action_type,total_recommender,recomm
 		if recommender_first=="1":
 			frappe.db.set_value("Leave Application",{'name':leave_application_name}, {'recommender_first': 1},update_modified=False)
 			if total_recommender=="1":
-				frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Recommonded'},update_modified=False)
+				frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Recommended'},update_modified=False)
 
 		if recommender_second=="1":
 			frappe.db.set_value("Leave Application",{'name':leave_application_name}, {'recommender_second': 1},update_modified=False)
 			if total_recommender=="2":
-				frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Recommonded'},update_modified=False)
+				frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Recommended'},update_modified=False)
 		
 		if recommender_third=="1":
 			frappe.db.set_value("Leave Application",{'name':leave_application_name}, {'recommender_third': 1},update_modified=False)
 			if total_recommender=="3":
-				frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Recommonded'},update_modified=False)
+				frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Recommended'},update_modified=False)
 	
 	if action_type=='not_recommond' or action_type=='not_approved':
 		frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Rejected'},update_modified=False)
