@@ -121,7 +121,9 @@ frappe.ui.form.on("Leave Application", {
 								fieldname: ["name","from_date","to_date","vacation_leave_type"]
 							},
 							callback: function(r){
-								if(!r.name){
+								//console.log(r.message)
+								var data = r.message
+								if(!data.name){
 									frappe.msgprint(__("Your Leave Dates are out of the vacation  ."));
 									frm.set_value("to_date", "")
 									frm.set_value("from_date","");
@@ -141,7 +143,42 @@ frappe.ui.form.on("Leave Application", {
 
 	leave_encashment:function(frm){
 
-		console.log(frm.doc.total_leave_days);
+		if(frm.doc.from_date && frm.doc.to_date && frm.doc.leave_type){
+
+			console.log(frm.doc.total_leave_days)
+
+			frappe.call({
+				method: "frappe.client.get_value",
+				args: {
+					doctype: "Leave Allocation",
+					filters: { "employee": frm.doc.employee, "leave_type_name": 'Earned Leave' },
+					fieldname: "total_leaves_allocated"
+				},
+				callback: function (r) {
+					var data = r.message;
+					console.log(data);
+					if (data.total_leaves_allocated) {
+						
+						var total_EL_balance = data.total_leaves_allocated;
+						var total_leave_days = frm.doc.total_leave_days;
+
+						var new_El_balance = total_EL_balance - total_leave_days;
+
+						if(!new_El_balance >= 30){
+
+							frappe.msgprint(__("Your Can not Take leave encashment because El Leave."));
+							frm.set_value("leave_encashment","");
+						}
+
+
+					}
+				}
+			});
+
+
+		}else{
+			frappe.msgprint(__("Plaease Select Leave Type"));
+		}
 
 	},
 
@@ -434,35 +471,40 @@ frappe.ui.form.on("Leave Application", {
 
 	ltc_leave:function(frm){
 
-		if(!frm.doc.employee){
-			frappe.msgprint(__("Please Select Employee."));
+		if(frm.doc.leave_type && frm.doc.employee && frm.doc.from_date && frm.doc.to_date){
+
+			frappe.call({
+				"method": "frappe.client.get_value",
+				"args": {
+					doctype: "Employee",
+					filters: [
+						["name", "=", frm.doc.employee]
+					],
+					fieldname: "date_of_joining"
+				},
+				"callback": function (response) {
+					var data = response.message;
+	
+					var one_year_date = frappe.datetime.add_days(data.date_of_joining, 365)
+	
+					var current_date = frappe.datetime.nowdate();
+	
+					if (one_year_date > current_date) {
+	
+						frappe.msgprint(__("After One Year Services Than you Can Applied LTC."));
+	
+					}
+				}
+			});
+
+			employee_dependent_get(frm.doc.employee);
+		}else{
+
+			frappe.msgprint(__("Please Select Required Fields"));
+			frm.set_value("ltc_leave","");
 		}
 
-		frappe.call({
-			"method": "frappe.client.get_value",
-			"args": {
-				doctype: "Employee",
-				filters: [
-					["name", "=", frm.doc.employee]
-				],
-				fieldname: "date_of_joining"
-			},
-			"callback": function (response) {
-				var data = response.message;
-
-				var one_year_date = frappe.datetime.add_days(data.date_of_joining, 365)
-
-				var current_date = frappe.datetime.nowdate();
-
-				if (one_year_date > current_date) {
-
-					frappe.msgprint(__("After One Year Services Than you Can Applied LTC."));
-
-				}
-			}
-		});
-
-		employee_dependent_get(frm.doc.employee);
+		
 
 	},
 	leave_type:function(frm){
