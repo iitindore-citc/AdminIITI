@@ -1,4 +1,5 @@
 from . import __version__ as app_version
+# from apps.admin_iiti import admin_iiti
 
 app_name = "admin_iiti"
 app_title = "Admin IITI"
@@ -31,8 +32,13 @@ app_license = "MIT"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
-# doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
+doctype_js = {
+        "Leave Application" : "public/js/leave_application_custom.js",
+        "Employee" : "public/js/Employee_custom.js"
+    }
+doctype_list_js = {
+    "Leave Application" : "public/js/leave_application_list_custom.js"
+    }
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 
@@ -96,9 +102,11 @@ app_license = "MIT"
 # ---------------
 # Override standard doctype classes
 
-# override_doctype_class = {
-# 	"ToDo": "custom_app.overrides.CustomToDo"
-# }
+override_doctype_class = {
+	#"Doctype Name": "custom_app.Custom_File_name.Custom_File_class_name"
+	"Leave Application": "admin_iiti.overrides.CustomLeaveApplication",
+	"Leave Policy Assignment": "admin_iiti.leave_policy_assignment_override.LeavePolicyAssignmentoverride"   
+}
 
 # Document Events
 # ---------------
@@ -112,26 +120,44 @@ app_license = "MIT"
 #	}
 # }
 
+doc_events ={
+
+    "Leave Application":{
+
+		# "validate":"admin_iiti.overrides.recommended_validation",
+        "validate":"admin_iiti.overrides.leave_type_validation",
+        "after_insert":"admin_iiti.overrides.after_insert_recommeder"
+	}
+}
+
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"admin_iiti.tasks.all"
-# 	],
-# 	"daily": [
-# 		"admin_iiti.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"admin_iiti.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"admin_iiti.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"admin_iiti.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+
+    # "cron":{
+    #     "* * *":[
+    #         "admin_iiti.assign_leave_task.cron"
+    #     ]
+
+    # },
+	"all": [
+		"admin_iiti.tasks.all"
+	],
+	"daily": [
+		"admin_iiti.tasks.daily"
+	],
+	"hourly": [
+		"admin_iiti.tasks.hourly"
+	],
+	"weekly": [
+		"admin_iiti.tasks.weekly"
+	],
+	"monthly": [
+		"admin_iiti.tasks.monthly",
+		"admin_iiti.assign_leave_task.cron"
+	],
+}
 
 # Testing
 # -------
