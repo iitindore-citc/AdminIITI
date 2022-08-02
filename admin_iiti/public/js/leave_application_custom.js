@@ -124,9 +124,6 @@ frappe.ui.form.on("Leave Application", {
 									frm.set_value("to_date", "")
 									frm.set_value("from_date","");
 									frm.set_value("leave_type","");
-								}else{
-
-
 								}
 								
 							}
@@ -138,6 +135,12 @@ frappe.ui.form.on("Leave Application", {
 		}
 	},
 	//end show alert message for number of taken leave is not greater than allocated leave 
+
+	leave_encashment:function(frm){
+
+		console.log(frm.doc.total_leave_days);
+
+	},
 
     make_dashboard: function(frm) {
 		var leave_details;
