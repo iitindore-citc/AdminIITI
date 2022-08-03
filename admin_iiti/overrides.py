@@ -37,18 +37,7 @@ from frappe.utils import (
 class CustomLeaveApplication(Document):
 	
 	def on_update(self):
-        #///////notification to approver
-		# if self.status == "Open" and self.docstatus < 1:
-		# 	if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-		# 		notify_leave_approver(self)
-					
-		# if self.status == "Recommended" and self.docstatus < 1:
-		# 	share_doc_with_approver(self, self.leave_approver)
-
-		# condition for  doc share with approver 
-		##frappe.throw(self.)
-		
-		#check delegate for user
+		#frappe.throw(frappe.as_json(self))
 		leave_approver = self.leave_approver
 		leave_recommendor = self.leave_recommender
 		leave_recommender_second = self.leave_recommender_second
@@ -185,14 +174,7 @@ class CustomLeaveApplication(Document):
 				share_doc_with_approver(self, leave_approver)
 				if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
 					notify_leave_approver(self)
-		
-		# end condition for  doc share with approver 
-			
-		# if self.leave_recommender:
-		# 	share_doc_with_recommender(self, self.leave_recommender)
-		# else:
-		# 	share_doc_with_approver(self, self.leave_approver)
-            
+
 def share_doc_with_recommender(doc, user):
 	# if approver does not have permissions, share
 	if not frappe.has_permission(doc=doc, ptype="write", user=user):
@@ -219,19 +201,15 @@ def share_doc_with_recommender(doc, user):
 
 @frappe.whitelist()
 def check_delegate(user):
-	#check delegate and override user
+	today = date.today()
+	values = {'owner': user,"today":today}
 
-
-	values = {'owner': user}
-
-	check_delegate = frappe.db.sql("SELECT delegate_to FROM `tabDelegate Responsibility`  WHERE now() BETWEEN from_date AND to_date and owner=%(owner)s",values=values,as_dict=True)
-
+	check_delegate = frappe.db.sql("SELECT delegate_to FROM `tabDelegate Responsibility`  WHERE %(today)s BETWEEN from_date AND to_date and owner=%(owner)s",values=values,as_dict=True)
+	
 	if check_delegate:
-		##frappe.throw(check_delegate[0].delegate_to)
 		user = check_delegate[0].delegate_to
 	else:
 		user = ""
-		
 	return user
 
 def notify_leave_approver(self):
