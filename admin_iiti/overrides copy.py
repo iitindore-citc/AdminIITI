@@ -37,7 +37,10 @@ from frappe.utils import (
 class CustomLeaveApplication(Document):
 	
 	def on_update(self):
-		#frappe.throw(frappe.as_json(self))
+		self.share_doc_to_next()
+		
+	def share_doc_to_next(self):
+		#check delegate for user
 		leave_approver = self.leave_approver
 		leave_recommendor = self.leave_recommender
 		leave_recommender_second = self.leave_recommender_second
@@ -174,24 +177,6 @@ class CustomLeaveApplication(Document):
 				share_doc_with_approver(self, leave_approver)
 				if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
 					notify_leave_approver(self)
-
-
-def on_submit(self):
-		if self.status == "Open":
-			frappe.throw(_("Only Leave Applications with status 'Approved' and 'Rejected' can be submitted"))
-
-		if self.leave_type_name  == "Vacation Leave":
-			self.El_update()
-
-		self.validate_back_dated_application()
-		self.update_attendance()
-
-		# notify leave applier about approval
-		if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-			self.notify_employee()
-
-		self.create_leave_ledger_entry()
-		self.reload()
 
 def share_doc_with_recommender(doc, user):
 	# if approver does not have permissions, share
@@ -734,28 +719,3 @@ def set_leave_status(leave_application_name,action_type,total_recommender,recomm
 		frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Approved'},update_modified=False)
 	
 	return action_type
-
-
-@frappe.whitelist()
-def Get_EL_Balance(employee):
-
-	data  = frappe.db.get_value("Leave Allocation",{"employee":employee,"leave_type_name": 'Earned Leave'},"total_leaves_allocated")
-	
-	return data
-
-def El_update(self):
-
-	frappe.throw(frappe.as_json(self))
-
-	total_no_leaves = get_number_of_leave_days(self.employee)
-
-	El_balance = frappe.db.get_value("Leave Allocation",{"employee":self.employee,"leave_type_name": 'Earned Leave'},"total_leaves_allocated")
-
-	new_El_balance  = El_balance - total_no_leaves/2
-	#update monthcount = 12
-	frappe.db.set_value("Leave Allocation", {'employee':self.employee,'leave_type_name':'Earned Leave'},{'new_leaves_allocated': new_El_balance, 'total_leaves_allocated': new_El_balance}, update_modified=False)
-	
-	LA = frappe.db.get_value("Leave Allocation",{"employee":self.employee,"leave_type_name": 'Earned Leave'},"total_leaves_allocated")
-
-    #update ledger leave entry
-	frappe.db.set_value("Leave Ledger Entry", {'transaction_name':LA.name,'leave_type':LA.leave_type},{'leaves': new_El_balance}, update_modified=False)

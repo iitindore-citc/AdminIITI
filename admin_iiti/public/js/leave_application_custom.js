@@ -80,34 +80,16 @@ frappe.ui.form.on("Leave Application", {
 
 						frappe.msgprint(__("There is not enough leave balance for this Leave Type"));
 						frm.set_value("to_date", "")
-						frm.set_value("total_leave_days","");
+						//frm.set_value("total_leave_days","");
 					}
 					//check validaton for  vacation leave Period 
 
-					if(frm.doc.leave_type_name = 'Vacation Leave'){
+					if(frm.doc.leave_type_name == "Vacation Leave"){
 
-						if(total_leave_days < 10){
+						if(total_leave_days <= 10){
 
 							frappe.msgprint(__("You have to take maximum of 10 days for vacation leave."));
 						}
-
-						// frappe.call({
-						// 	method: "frappe.client.get_value",
-						// 	args: {
-						// 		doctype: "Leave Allocation",
-						// 		filters: {"employee": frm.doc.employee,"leave_type_name":frm.doc.leave_type_name},
-						// 		fieldname: "total_leaves_allocated"
-						// 	},
-						// 	callback: function(r){
-						// 		var data = r.message
-
-						// 		//console.log(r);
-						// 		if(data){
-						// 			//console.log(data.total_leaves_allocated);
-						// 		}
-						// 	}
-						// });
-
 						frappe.call({
 							method: "frappe.client.get_value",
 							args: {
@@ -121,14 +103,14 @@ frappe.ui.form.on("Leave Application", {
 								fieldname: ["name","from_date","to_date","vacation_leave_type"]
 							},
 							callback: function(r){
-								//console.log(r.message)
+								console.log(r.message)
 								var data = r.message
 								if(!data.name){
 									frappe.msgprint(__("Your Leave Dates are out of the vacation  ."));
 									frm.set_value("to_date", "")
 									frm.set_value("from_date","");
 									frm.set_value("leave_type","");
-									frm.set_value("total_leave_days","");
+									//frm.set_value("total_leave_days","");
 								}
 								
 							}
@@ -143,45 +125,75 @@ frappe.ui.form.on("Leave Application", {
 
 	leave_encashment:function(frm){
 
-		if(frm.doc.from_date && frm.doc.to_date && frm.doc.leave_type){
+		if(frm.doc.total_leave_days <= 10){
 
-			console.log(frm.doc.total_leave_days)
+			frappe.msgprint(__("You have to take maximum of 10 days for leave encashment."));
+		}
 
-			frappe.call({
-				method: "frappe.client.get_value",
-				args: {
-					doctype: "Leave Allocation",
-					filters: { "employee": frm.doc.employee, "leave_type_name": 'Earned Leave' },
-					fieldname: "total_leaves_allocated"
-				},
-				callback: function (r) {
-					var data = r.message;
-					console.log(data);
-					if (data.total_leaves_allocated) {
-						
-						var total_EL_balance = data.total_leaves_allocated;
-						var total_leave_days = frm.doc.total_leave_days;
+		frm.toggle_display("encashment_days", true);
 
-						var new_El_balance = total_EL_balance - total_leave_days;
+		var total_EL_balance;
+		var total_leave_days;
+		var encashment_days;
+		frappe.call({
+			method: "admin_iiti.overrides.Get_EL_Balance",
+			args: {
+				employee: frm.doc.employee,
+			},
+			callback: function (r) {
+				var data = r.message;
+				console.log(data);
+				if (data) {
 
-						console.log("check leave",total_EL_balance,total_leave_days,new_El_balance);
+					total_EL_balance = data;
+					total_leave_days = frm.doc.total_leave_days;
+					encashment_days = frm.doc.encashment_days;
+
+					
+		//console.log(T_EL,total_leave_days);
+					if (frm.doc.leave_type_name == 'Vacation Leave') {
 
 
-						if(!new_El_balance >= 30){
+						var vacation_leave_after_deduction_El_balance = total_EL_balance - total_leave_days / 2 - encashment_days;
 
-							frappe.msgprint(__("Your Can not Take leave encashment because El Leave."));
-							frm.set_value("leave_encashment","");
+						console.log(vacation_leave_after_deduction_El_balance);
+
+						if (vacation_leave_after_deduction_El_balance <= 30) {
+
+							frappe.msgprint(__(" There is not enough Earned leave balance for Encashment."));
+							frm.set_value("leave_encashment", "")
+							frm.set_value("encashment_days", "");
+							frm.toggle_display("encashment_days", false);
 						}
 
+					} else {
+
+						var other_leave_after_deduction_El_balance = total_EL_balance - encashment_days;
+
+						console.log(other_leave_after_deduction_El_balance);
+
+						if (other_leave_after_deduction_El_balance <= 30) {
+
+							frappe.msgprint(__(" There is not enough Earned leave balance for Encashment."));
+							frm.set_value("leave_encashment", "")
+							frm.set_value("encashment_days", "");
+							frm.toggle_display("encashment_days", false);
+						}
 
 					}
+
 				}
-			});
+			}
+		});
+
+		// var T_EL =total_EL_balance;
+		// var T_L_D =total_leave_days;
+		// var En_D  =encashment_days;
 
 
-		}else{
-			frappe.msgprint(__("Plaease Select Leave Type"));
-		}
+		// }else{
+		// 	frappe.msgprint(__("Plaease Select Leave Type"));
+		// }
 
 	},
 
@@ -230,38 +242,6 @@ frappe.ui.form.on("Leave Application", {
 			});
 		}
 	},
-	// All Recommender fields default value sat
-	setup: function(frm) {
-		// frm.set_query("leave_recommender", function() {
-		// 	return {
-		// 		query: "admin_iiti.overrides.employeelistfirst",
-		// 		filters: {
-		// 			employee: frm.doc.employee,
-		// 			doctype: frm.doc.doctype
-		// 		}
-		// 	};
-		// });
-		// frm.set_query("leave_recommender_second", function() {
-		// 	return {
-		// 		query: "admin_iiti.overrides.employeelistsecond",
-		// 		filters: {
-		// 			employee: frm.doc.employee,
-		// 			doctype: frm.doc.doctype
-		// 		}
-		// 	};
-		// });
-		// frm.set_query("leave_recommender_third", function() {
-		// 	return {
-		// 		query: "admin_iiti.overrides.employeelistthird",
-		// 		filters: {
-		// 			employee: frm.doc.employee,
-		// 			doctype: frm.doc.doctype
-		// 		}
-		// 	};
-		// });
-	},
-
-	//End Recommender condition
 
 	employee: function(frm) {
 		//frm.trigger("make_dashboard");
@@ -299,7 +279,7 @@ frappe.ui.form.on("Leave Application", {
 
 					
 					if(Delegate_to == frappe.session.user || frm.doc.leave_recommender==frappe.session.user){
-						//frm.toggle_display("recommender_first",true);
+						frm.toggle_display("recommender_first",true);
 						if(frm.doc.recommender_first==1){
 							frm.toggle_display("recommended_", true);
 							frm.toggle_display("not_recommonded", false);
@@ -336,7 +316,7 @@ frappe.ui.form.on("Leave Application", {
 					});
 
 					if(Delegate_to && Delegate_to == frappe.session.user || frm.doc.leave_recommender_second == frappe.session.user){
-						//frm.toggle_display("recommender_second",true);
+						frm.toggle_display("recommender_second",true);
 						if(frm.doc.recommender_second==1){
 							frm.toggle_display("recommended_", true);
 							frm.toggle_display("not_recommonded", false);
@@ -372,7 +352,7 @@ frappe.ui.form.on("Leave Application", {
 					});
 
 					if(Delegate_to && Delegate_to == frappe.session.user || frm.doc.leave_recommender_third == frappe.session.user){
-						//frm.toggle_display("recommender_third",true);
+						frm.toggle_display("recommender_third",true);
 						if(frm.doc.recommender_third==1){
 							frm.toggle_display("recommended_", true);
 							frm.toggle_display("not_recommonded", false);
@@ -458,9 +438,16 @@ frappe.ui.form.on("Leave Application", {
 			}
 	},
 	add_more_recommender: function(frm) {
-	
-		frm.toggle_display("leave_recommender_third",true);
-		frm.toggle_display("leave_recommender_second",true);
+
+		if(frm.doc.add_more_recommender){
+
+			frm.toggle_display("leave_recommender_third",true);
+			frm.toggle_display("leave_recommender_second",true);
+
+		}else{
+			frm.toggle_display("leave_recommender_third",false);
+			frm.toggle_display("leave_recommender_second",false);
+		}
 		
 	},
 	set_status_dropdown: function(frm) {
@@ -476,31 +463,35 @@ frappe.ui.form.on("Leave Application", {
 
 		if(frm.doc.leave_type && frm.doc.employee && frm.doc.from_date && frm.doc.to_date){
 
-			frappe.call({
-				"method": "frappe.client.get_value",
-				"args": {
-					doctype: "Employee",
-					filters: [
-						["name", "=", frm.doc.employee]
-					],
-					fieldname: "date_of_joining"
-				},
-				"callback": function (response) {
-					var data = response.message;
-	
-					var one_year_date = frappe.datetime.add_days(data.date_of_joining, 365)
-	
-					var current_date = frappe.datetime.nowdate();
-	
-					if (one_year_date > current_date) {
-	
-						frappe.msgprint(__("After One Year Services Than you Can Applied LTC."));
-	
-					}
-				}
-			});
+			if(frm.doc.ltc_leave){
 
-			employee_dependent_get(frm.doc.employee);
+				frappe.call({
+					"method": "frappe.client.get_value",
+					"args": {
+						doctype: "Employee",
+						filters: [
+							["name", "=", frm.doc.employee]
+						],
+						fieldname: "date_of_joining"
+					},
+					"callback": function (response) {
+						var data = response.message;
+		
+						var one_year_date = frappe.datetime.add_days(data.date_of_joining, 365)
+		
+						var current_date = frappe.datetime.nowdate();
+		
+						if (one_year_date > current_date) {
+		
+							frappe.msgprint(__("After One Year Services Than you Can Applied LTC."));
+		
+						}
+					}
+				});
+	
+				employee_dependent_get(frm.doc.employee);
+
+			}
 		}else{
 
 			frappe.msgprint(__("Please Select Required Fields"));
@@ -511,9 +502,6 @@ frappe.ui.form.on("Leave Application", {
 
 	},
 	leave_type:function(frm){
-
-		console.log(frm.doc.leave_type_name)
-		
 		if(frm.doc.leave_type == 'Casual Leave'){
 			frm.toggle_display("half_day",true);
 		}else{
@@ -579,29 +567,54 @@ frappe.ui.form.on("Leave Application", {
 })
 
 function change_leave_status(frm,leave_application_name,action_type,total_recommender){
+
 	var recommender_first = 0;
 	var recommender_second = 0;
 	var recommender_third = 0;
 
 	if(frm.doc.leave_recommender){
-		if(frm.doc.leave_recommender==frappe.session.user){
+		var delegate_1 = check_delegate(frm.doc.leave_recommender);
+		//check delegate if exist
+		if(delegate_1 && delegate_1 == frappe.session.user){
 			recommender_first = 1;
+		}else if(frm.doc.leave_recommender==frappe.session.user){
+			recommender_first = 1;
+		}
+        if(recommender_first==1){
+			cur_frm.set_value("recommender_first", 1);
+			cur_frm.refresh_field();
 		}
 	}
 	
 	if(frm.doc.leave_recommender_second){
-		if(frm.doc.leave_recommender_second==frappe.session.user){
+		var delegate_2 = check_delegate(frm.doc.leave_recommender_second);
+		//check delegate if exist
+		if(delegate_2 && delegate_2 == frappe.session.user){
 			recommender_second = 1;
+		}else if(frm.doc.leave_recommender_second==frappe.session.user){
+			recommender_second = 1;
+		}
+		if(recommender_second==1){
+			cur_frm.set_value("recommender_second", 1);
+			cur_frm.refresh_field();
+		}
+	}
+
+	if(frm.doc.leave_recommender_third){
+		var delegate_3 = check_delegate(frm.doc.leave_recommender_third);
+		//check delegate if exist
+		if(delegate_3 && delegate_3 == frappe.session.user){
+			recommender_third = 1;
+		}else if(frm.doc.leave_recommender_second==frappe.session.user){
+			recommender_third = 1;
+		}
+
+		if(leave_recommender_third==1){
+			cur_frm.set_value("recommender_third", 1);
+			cur_frm.refresh_field();
 		}
 	}
 	
-	if(frm.doc.leave_recommender_third){
-		if(frm.doc.leave_recommender_third==frappe.session.user){
-			recommender_third = 1;
-		}
-	}
-
-
 	if (leave_application_name) {
 		frappe.call({
 			method: "admin_iiti.overrides.set_leave_status",
@@ -623,10 +636,26 @@ function change_leave_status(frm,leave_application_name,action_type,total_recomm
 				}else if(r.message=='approved'){
 					frappe.msgprint('You have approved successfully');
 				}
-				//location.reload();				
+				cur_frm.save();
+				location.reload();
 			}
 		});
 	}
+}
+
+function check_delegate(recommender){
+					var Delegate_to = "";
+					frappe.call({
+						method: "admin_iiti.overrides.check_delegate",
+						async: false,
+						args: {
+							"user": recommender,
+						},
+						callback: function (r) {
+							Delegate_to = r.message
+						}
+					});
+					return Delegate_to;
 }
 
 function get_delegate(user) {
@@ -664,17 +693,23 @@ function employee_dependent_get(employee) {
 		"callback": function (response) {
 			
 			var depended = response.message;
-			console.log("depended",depended);
-			depended.forEach(function (item) {
+			console.log(depended);
+			if(depended.length >0){
+				cur_frm.clear_table('ltc_claimed');
 
-				var age = get_age(item.date_of_birth);
-
-				var child = cur_frm.add_child('ltc_claimed');
-				frappe.model.set_value(child.doctype, child.name, 'family_members', item.dependent_name);
-				frappe.model.set_value(child.doctype, child.name, 'age', age);
-				frappe.model.set_value(child.doctype, child.name, 'relationship', item.relation);
-		
-			});
+				depended.forEach(function (item) {
+					var age = get_age(item.date_of_birth);
+	
+					var child = cur_frm.add_child('ltc_claimed');
+					frappe.model.set_value(child.doctype, child.name, 'family_members', item.dependent_name);
+					frappe.model.set_value(child.doctype, child.name, 'age', age);
+					frappe.model.set_value(child.doctype, child.name, 'relationship', item.relation);
+			
+				});
+			}else{
+				cur_frm.clear_table('ltc_claimed');
+			}
+			
 			cur_frm.refresh_field('ltc_claimed');
 
 		}
