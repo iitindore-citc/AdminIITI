@@ -164,6 +164,9 @@ frappe.ui.form.on("Leave Application", {
 
 						var new_El_balance = total_EL_balance - total_leave_days;
 
+						console.log("check leave",total_EL_balance,total_leave_days,new_El_balance);
+
+
 						if(!new_El_balance >= 30){
 
 							frappe.msgprint(__("Your Can not Take leave encashment because El Leave."));
