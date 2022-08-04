@@ -177,21 +177,25 @@ class CustomLeaveApplication(Document):
 
 
 def on_submit(self):
-		if self.status == "Open":
-			frappe.throw(_("Only Leave Applications with status 'Approved' and 'Rejected' can be submitted"))
+	frappe.throw('submit call')
+	if self.status == "Open":
+		frappe.throw(
+			_("Only Leave Applications with status 'Approved' and 'Rejected' can be submitted"))
 
-		if self.leave_type_name  == "Vacation Leave":
-			self.El_update()
+	if self.leave_type_name == "Vacation Leave":
+		frappe.throw('uuu')
+		self.El_update()
 
-		self.validate_back_dated_application()
-		self.update_attendance()
+	self.validate_back_dated_application()
+	self.update_attendance()
 
-		# notify leave applier about approval
-		if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-			self.notify_employee()
+	# notify leave applier about approval
+	if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
+		self.notify_employee()
 
-		self.create_leave_ledger_entry()
-		self.reload()
+	self.create_leave_ledger_entry()
+	self.reload()
+
 
 def share_doc_with_recommender(doc, user):
 	# if approver does not have permissions, share

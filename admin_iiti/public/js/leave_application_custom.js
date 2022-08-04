@@ -86,7 +86,7 @@ frappe.ui.form.on("Leave Application", {
 
 					if(frm.doc.leave_type_name == "Vacation Leave"){
 
-						if(total_leave_days <= 10){
+						if(total_leave_days < 10){
 
 							frappe.msgprint(__("You have to take maximum of 10 days for vacation leave."));
 						}
@@ -627,21 +627,31 @@ function change_leave_status(frm,leave_application_name,action_type,total_recomm
 				action_type: action_type,
 			},
 			callback: function (r) {
+				console.log('r',r)
 				if(r.message=='recommond'){
 					frappe.msgprint('You have recommended successfully');
+					cur_frm.save();
 				}else if(r.message=='not_recommond'){
 					frappe.msgprint('You have Not recommended successfully');
 				}else if(r.message=='not_approved'){
 					frappe.msgprint('You have Not approved successfully');
 				}else if(r.message=='approved'){
-					frappe.msgprint('You have approved successfully');
+					//frappe.msgprint('You have approved successfully');
+					frappe.call({
+						"method": "frappe.client.submit",
+						"args": {
+							  "doctype": frm.doctype,
+							  "docname": frm.docname,
+							  "doc":frm.doc
+						}
+					});
 				}
-				cur_frm.save();
-				location.reload();
+				//location.reload();
 			}
 		});
 	}
 }
+
 
 function check_delegate(recommender){
 					var Delegate_to = "";
