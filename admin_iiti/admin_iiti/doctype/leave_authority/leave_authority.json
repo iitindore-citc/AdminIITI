@@ -1,0 +1,100 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:position",
+ "creation": "2022-08-05 17:24:26.657252",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "position",
+  "leave",
+  "column_break_3",
+  "leave_type",
+  "first_recommender",
+  "second_recommender",
+  "column_break_7",
+  "third_recommender",
+  "approving_authority"
+ ],
+ "fields": [
+  {
+   "fieldname": "position",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Position",
+   "options": "Employee Position",
+   "reqd": 1
+  },
+  {
+   "fieldname": "leave",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Leave",
+   "options": "Leave Type",
+   "reqd": 1
+  },
+  {
+   "fieldname": "leave_type",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Leave Type"
+  },
+  {
+   "fieldname": "first_recommender",
+   "fieldtype": "Link",
+   "label": "First Recommender",
+   "options": "User"
+  },
+  {
+   "fieldname": "second_recommender",
+   "fieldtype": "Link",
+   "label": "Second Recommender",
+   "options": "User"
+  },
+  {
+   "fieldname": "third_recommender",
+   "fieldtype": "Link",
+   "label": "Third Recommender",
+   "options": "User"
+  },
+  {
+   "fieldname": "approving_authority",
+   "fieldtype": "Link",
+   "label": "Approving Authority",
+   "options": "User"
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_7",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2022-08-05 17:38:39.578898",
+ "modified_by": "Administrator",
+ "module": "Admin IITI",
+ "name": "Leave Authority",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -50,7 +50,7 @@ frappe.ui.form.on("Leave Application", {
 		
 		frm.trigger("half_day_datepicker");
 		frm.trigger("calculate_total_days");
-		var leave_balance;
+		var leave_balancess;
 		var total_leave_days;
 		if (frm.doc.docstatus === 0 && frm.doc.employee && frm.doc.leave_type && frm.doc.from_date && frm.doc.to_date) {
 			frappe.call({
@@ -67,16 +67,16 @@ frappe.ui.form.on("Leave Application", {
 				},
 				callback: function (r) {
 					if (!r.exc && r.message['total_leaves']) {
-						frm.set_value('leave_balance', r.message['total_leaves']);
+						//frm.set_value('leave_balance', r.message['total_leaves']);
 
 					} else {
-						frm.set_value('leave_balance', "0");
+						//frm.set_value('leave_balance', "0");
 					}
 
-					leave_balance = r.message['total_leaves'];
+					leave_balancess = r.message['total_leaves'];
 					total_leave_days = r.message['number_of_days'];
 
-					if(leave_balance < total_leave_days ){
+					if(leave_balancess < total_leave_days ){
 
 						frappe.msgprint(__("There is not enough leave balance for this Leave Type"));
 						frm.set_value("to_date", "")
@@ -130,71 +130,64 @@ frappe.ui.form.on("Leave Application", {
 			frappe.msgprint(__("You have to take maximum of 10 days for leave encashment."));
 		}
 
-		frm.toggle_display("encashment_days", true);
+		if(leave_encashment){
 
-		var total_EL_balance;
-		var total_leave_days;
-		var encashment_days;
-		frappe.call({
-			method: "admin_iiti.overrides.Get_EL_Balance",
-			args: {
-				employee: frm.doc.employee,
-			},
-			callback: function (r) {
-				var data = r.message;
-				console.log(data);
-				if (data) {
+			frm.toggle_display("encashment_days", true);
 
-					total_EL_balance = data;
-					total_leave_days = frm.doc.total_leave_days;
-					encashment_days = frm.doc.encashment_days;
+			var total_EL_balance;
+			var total_leave_days;
+			var encashment_days;
+			frappe.call({
+				method: "admin_iiti.overrides.Get_EL_Balance",
+				args: {
+					employee: frm.doc.employee,
+				},
+				callback: function (r) {
+					var data = r.message;
+					console.log(data);
+					if (data) {
 
-					
-		//console.log(T_EL,total_leave_days);
-					if (frm.doc.leave_type_name == 'Vacation Leave') {
+						total_EL_balance = data;
+						total_leave_days = frm.doc.total_leave_days;
+						encashment_days = frm.doc.encashment_days;
 
 
-						var vacation_leave_after_deduction_El_balance = total_EL_balance - total_leave_days / 2 - encashment_days;
+						if (frm.doc.leave_type_name == 'Vacation Leave') {
 
-						console.log(vacation_leave_after_deduction_El_balance);
 
-						if (vacation_leave_after_deduction_El_balance <= 30) {
+							var vacation_leave_after_deduction_El_balance = total_EL_balance - total_leave_days / 2 - encashment_days;
 
-							frappe.msgprint(__(" There is not enough Earned leave balance for Encashment."));
-							frm.set_value("leave_encashment", "")
-							frm.set_value("encashment_days", "");
-							frm.toggle_display("encashment_days", false);
-						}
+							console.log(vacation_leave_after_deduction_El_balance);
 
-					} else {
+							if (vacation_leave_after_deduction_El_balance <= 30) {
 
-						var other_leave_after_deduction_El_balance = total_EL_balance - encashment_days;
+								frappe.msgprint(__(" There is not enough Earned leave balance for Encashment."));
+								frm.set_value("leave_encashment", "")
+								frm.set_value("encashment_days", "");
+								frm.toggle_display("encashment_days", false);
+							}
 
-						console.log(other_leave_after_deduction_El_balance);
+						} else {
 
-						if (other_leave_after_deduction_El_balance <= 30) {
+							var other_leave_after_deduction_El_balance = total_EL_balance - encashment_days;
 
-							frappe.msgprint(__(" There is not enough Earned leave balance for Encashment."));
-							frm.set_value("leave_encashment", "")
-							frm.set_value("encashment_days", "");
-							frm.toggle_display("encashment_days", false);
+							console.log(other_leave_after_deduction_El_balance);
+
+							if (other_leave_after_deduction_El_balance <= 30) {
+
+								frappe.msgprint(__(" There is not enough Earned leave balance for Encashment."));
+								frm.set_value("leave_encashment", "")
+								frm.set_value("encashment_days", "");
+								frm.toggle_display("encashment_days", false);
+							}
+
 						}
 
 					}
-
 				}
-			}
-		});
+			});
 
-		// var T_EL =total_EL_balance;
-		// var T_L_D =total_leave_days;
-		// var En_D  =encashment_days;
-
-
-		// }else{
-		// 	frappe.msgprint(__("Plaease Select Leave Type"));
-		// }
-
+		}
 	},
 
     make_dashboard: function(frm) {
@@ -625,6 +618,8 @@ function change_leave_status(frm,leave_application_name,action_type,total_recomm
 				recommender_third: recommender_third,
 				total_recommender: total_recommender,
 				action_type: action_type,
+				leave_type:frm.doc.leave_type_name,
+				leave_data:frm.doc
 			},
 			callback: function (r) {
 				console.log('r',r)

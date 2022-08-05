@@ -4,5 +4,5 @@
 # import frappe
 from frappe.model.document import Document
 
-class LTCClaimedDetails(Document):
+class EmployeePositionDetails(Document):
 	pass
