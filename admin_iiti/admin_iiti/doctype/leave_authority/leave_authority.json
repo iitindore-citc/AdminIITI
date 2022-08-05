@@ -1,16 +1,15 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "field:position",
- "creation": "2022-08-05 17:24:26.657252",
+ "creation": "2022-08-05 17:58:27.125348",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
   "position",
-  "leave",
-  "column_break_3",
   "leave_type",
+  "column_break_3",
+  "leave_type_name",
   "first_recommender",
   "second_recommender",
   "column_break_7",
@@ -27,18 +26,22 @@
    "reqd": 1
   },
   {
-   "fieldname": "leave",
+   "fieldname": "leave_type",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Leave",
+   "label": "Leave Type",
    "options": "Leave Type",
    "reqd": 1
   },
   {
-   "fieldname": "leave_type",
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "leave_type_name",
    "fieldtype": "Data",
    "hidden": 1,
-   "label": "Leave Type"
+   "label": "Leave Type Name"
   },
   {
    "fieldname": "first_recommender",
@@ -53,6 +56,10 @@
    "options": "User"
   },
   {
+   "fieldname": "column_break_7",
+   "fieldtype": "Column Break"
+  },
+  {
    "fieldname": "third_recommender",
    "fieldtype": "Link",
    "label": "Third Recommender",
@@ -63,38 +70,32 @@
    "fieldtype": "Link",
    "label": "Approving Authority",
    "options": "User"
-  },
-  {
-   "fieldname": "column_break_3",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_7",
-   "fieldtype": "Column Break"
   }
  ],
  "index_web_pages_for_search": 1,
- "issingle": 1,
  "links": [],
- "modified": "2022-08-05 17:38:39.578898",
+ "modified": "2022-08-05 18:11:39.247199",
  "modified_by": "Administrator",
  "module": "Admin IITI",
  "name": "Leave Authority",
- "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [
   {
    "create": 1,
    "delete": 1,
    "email": 1,
+   "export": 1,
    "print": 1,
    "read": 1,
+   "report": 1,
    "role": "System Manager",
    "share": 1,
    "write": 1
   }
  ],
+ "search_fields": "position",
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "title_field": "position"
 }

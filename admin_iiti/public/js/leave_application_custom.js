@@ -389,13 +389,13 @@ frappe.ui.form.on("Leave Application", {
 							frm.toggle_display("not_approved", true);
 							document.querySelectorAll("[data-fieldname='not_approved']")[1].style.backgroundColor="red";
 						}else{
-							frm.set_df_property('status', 'options', ['Approved', 'Rejected','Cancelled'])
 							//frm.toggle_display("recommender_third",true);
 							frm.toggle_display("approved", true);
 							frm.toggle_display("not_approved", true);
 							document.querySelectorAll("[data-fieldname='approved']")[1].style.backgroundColor="#2490ef";
 							document.querySelectorAll("[data-fieldname='not_approved']")[1].style.backgroundColor="#2490ef";
 						}
+						frm.set_df_property('status', 'options', ['Approved','Open','Recommended','Rejected','Cancelled'])
 					}
 				}
 
@@ -448,7 +448,7 @@ frappe.ui.form.on("Leave Application", {
 					frm.set_df_property('status', 'options', ['Open', 'Recommended','Rejected'])
 				}
 				if(frm.doc.leave_approver==frappe.session.user){
-					frm.set_df_property('status', 'options', ['Approved', 'Rejected','Cancelled'])
+					frm.set_df_property('status', 'options', ['Open','Recommended','Approved', 'Rejected'])
 				}			
 	},
 
@@ -607,6 +607,10 @@ function change_leave_status(frm,leave_application_name,action_type,total_recomm
 			cur_frm.refresh_field();
 		}
 	}
+
+	if(action_type=='approved'){
+		cur_frm.set_value('status','Approved')
+	}
 	
 	if (leave_application_name) {
 		frappe.call({
@@ -622,7 +626,7 @@ function change_leave_status(frm,leave_application_name,action_type,total_recomm
 				leave_data:frm.doc
 			},
 			callback: function (r) {
-				console.log('r',r)
+				//console.log('r',r)
 				if(r.message=='recommond'){
 					frappe.msgprint('You have recommended successfully');
 					cur_frm.save();
@@ -631,15 +635,16 @@ function change_leave_status(frm,leave_application_name,action_type,total_recomm
 				}else if(r.message=='not_approved'){
 					frappe.msgprint('You have Not approved successfully');
 				}else if(r.message=='approved'){
-					//frappe.msgprint('You have approved successfully');
-					frappe.call({
-						"method": "frappe.client.submit",
-						"args": {
-							  "doctype": frm.doctype,
-							  "docname": frm.docname,
-							  "doc":frm.doc
-						}
-					});
+					frappe.msgprint('You have approved successfully');
+					cur_frm.savesubmit();
+					// frappe.call({
+					// 	"method": "frappe.client.submit",
+					// 	"args": {
+					// 		  "doctype": frm.doctype,
+					// 		  "docname": frm.docname,
+					// 		  "doc":frm.doc
+					// 	}
+					// });
 				}
 				//location.reload();
 			}

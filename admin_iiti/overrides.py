@@ -765,166 +765,165 @@ def set_leave_status(leave_application_name,action_type,total_recommender,recomm
 		
 	if action_type=='approved':
 		frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Approved'},update_modified=False)
-		leave_status = "Approved"
+		#leave_status = "Approved"
 		#ld = frappe.get_doc("Leave Application",leave_application_name)\
 		# aList = json.loads(leave_data)
 		# aList['status'] = "Approved"
 		# aList = json.dumps(aList)
-		validate_back_dated_application(leave_data)
-		##frappe.throw(frappe.as_json(leave_data))
-		update_attendance(leave_data,leave_status)
+		# validate_back_dated_application(leave_data)
+		# update_attendance(leave_data,leave_status)
 
-		# notify leave applier about approval
-		if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-			notify_employee(leave_data)
+		# # notify leave applier about approval
+		# if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
+		# 	notify_employee(leave_data)
 
-			create_leave_ledger_entry(leave_data)
+		# 	create_leave_ledger_entry(leave_data)
 
 		if leave_type == 'Vacation Leave':
 			El_update(leave_application_name)
 	
 	return action_type
 
-def validate_back_dated_application(leave_data):
-		aList = json.loads(leave_data)
-		#frappe.throw(aList["employee"])
-		future_allocation = frappe.db.sql("""select name, from_date from `tabLeave Allocation`
-			where employee=%s and leave_type=%s and docstatus=1 and from_date > %s
-			and carry_forward=1""", (aList["employee"], aList["leave_type"], aList["to_date"]), as_dict=1)
+# def validate_back_dated_application(leave_data):
+# 		aList = json.loads(leave_data)
+# 		#frappe.throw(aList["employee"])
+# 		future_allocation = frappe.db.sql("""select name, from_date from `tabLeave Allocation`
+# 			where employee=%s and leave_type=%s and docstatus=1 and from_date > %s
+# 			and carry_forward=1""", (aList["employee"], aList["leave_type"], aList["to_date"]), as_dict=1)
 
-		if future_allocation:
-			frappe.throw(_("Leave cannot be applied/cancelled before {0}, as leave balance has already been carry-forwarded in the future leave allocation record {1}")
-				.format(formatdate(future_allocation[0].from_date), future_allocation[0].name))
+# 		if future_allocation:
+# 			frappe.throw(_("Leave cannot be applied/cancelled before {0}, as leave balance has already been carry-forwarded in the future leave allocation record {1}")
+# 				.format(formatdate(future_allocation[0].from_date), future_allocation[0].name))
 
-def update_attendance(leave_data,leave_status):
-		aList = json.loads(leave_data)
-		if leave_status != "Approved":
-			return
+# def update_attendance(leave_data,leave_status):
+# 		aList = json.loads(leave_data)
+# 		if leave_status != "Approved":
+# 			return
 
-		holiday_dates = []
-		if not frappe.db.get_value("Leave Type", aList['leave_type'], "include_holiday"):
-			holiday_dates = get_holiday_dates_for_employee(aList['employee'], aList['from_date'], aList['to_date'])
+# 		holiday_dates = []
+# 		if not frappe.db.get_value("Leave Type", aList['leave_type'], "include_holiday"):
+# 			holiday_dates = get_holiday_dates_for_employee(aList['employee'], aList['from_date'], aList['to_date'])
 
-		for dt in daterange(getdate(aList['from_date']), getdate(aList['to_date'])):
-			date = dt.strftime("%Y-%m-%d")
-			attendance_name = frappe.db.exists("Attendance", dict(employee = aList['employee'],
-				attendance_date = date, docstatus = ('!=', 2)))
+# 		for dt in daterange(getdate(aList['from_date']), getdate(aList['to_date'])):
+# 			date = dt.strftime("%Y-%m-%d")
+# 			attendance_name = frappe.db.exists("Attendance", dict(employee = aList['employee'],
+# 				attendance_date = date, docstatus = ('!=', 2)))
 
-			# don't mark attendance for holidays
-			# if leave type does not include holidays within leaves as leaves
-			if date in holiday_dates:
-				if attendance_name:
-					# cancel and delete existing attendance for holidays
-					attendance = frappe.get_doc("Attendance", attendance_name)
-					attendance.flags.ignore_permissions = True
-					if attendance.docstatus == 1:
-						attendance.cancel()
-					frappe.delete_doc("Attendance", attendance_name, force=1)
-				continue
+# 			# don't mark attendance for holidays
+# 			# if leave type does not include holidays within leaves as leaves
+# 			if date in holiday_dates:
+# 				if attendance_name:
+# 					# cancel and delete existing attendance for holidays
+# 					attendance = frappe.get_doc("Attendance", attendance_name)
+# 					attendance.flags.ignore_permissions = True
+# 					if attendance.docstatus == 1:
+# 						attendance.cancel()
+# 					frappe.delete_doc("Attendance", attendance_name, force=1)
+# 				continue
 
-			create_or_update_attendance(aList,attendance_name, date)
+# 			create_or_update_attendance(aList,attendance_name, date)
 			
-def create_or_update_attendance(aList, attendance_name, date):
-		status = "Half Day" if aList['half_day_date'] and getdate(date) == getdate(aList['half_day_date']) else "On Leave"
+# def create_or_update_attendance(aList, attendance_name, date):
+# 		status = "Half Day" if aList['half_day_date'] and getdate(date) == getdate(aList['half_day_date']) else "On Leave"
 
-		if attendance_name:
-			# update existing attendance, change absent to on leave
-			doc = frappe.get_doc('Attendance', attendance_name)
-			if doc.status != status:
-				doc.db_set({
-					'status': status,
-					'leave_type': aList['leave_type'],
-					'leave_application': aList['name']
-				})
-		else:
-			# make new attendance and submit it
-			doc = frappe.new_doc("Attendance")
-			doc.employee = aList['employee']
-			doc.employee_name = aList['employee_name']
-			doc.attendance_date = date
-			doc.company = aList['company']
-			doc.leave_type = aList['leave_type']
-			doc.leave_application = aList['name']
-			doc.status = status
-			doc.flags.ignore_validate = True
-			doc.insert(ignore_permissions=True)
-			doc.submit()
+# 		if attendance_name:
+# 			# update existing attendance, change absent to on leave
+# 			doc = frappe.get_doc('Attendance', attendance_name)
+# 			if doc.status != status:
+# 				doc.db_set({
+# 					'status': status,
+# 					'leave_type': aList['leave_type'],
+# 					'leave_application': aList['name']
+# 				})
+# 		else:
+# 			# make new attendance and submit it
+# 			doc = frappe.new_doc("Attendance")
+# 			doc.employee = aList['employee']
+# 			doc.employee_name = aList['employee_name']
+# 			doc.attendance_date = date
+# 			doc.company = aList['company']
+# 			doc.leave_type = aList['leave_type']
+# 			doc.leave_application = aList['name']
+# 			doc.status = status
+# 			doc.flags.ignore_validate = True
+# 			doc.insert(ignore_permissions=True)
+# 			doc.submit()
 
-def create_leave_ledger_entry(leave_data, args='', submit=True):
-		aList = json.loads(leave_data)
-		if aList['status'] != 'Approved' and submit:
-			return
+# def create_leave_ledger_entry(leave_data, args='', submit=True):
+# 		aList = json.loads(leave_data)
+# 		if aList['status'] != 'Approved' and submit:
+# 			return
 
-		expiry_date = get_allocation_expiry(aList['employee'], aList['leave_type'],
-			aList['to_date'], aList['from_date'])
+# 		expiry_date = get_allocation_expiry(aList['employee'], aList['leave_type'],
+# 			aList['to_date'], aList['from_date'])
 
-		lwp = frappe.db.get_value("Leave Type", aList['leave_type'], "is_lwp")
+# 		lwp = frappe.db.get_value("Leave Type", aList['leave_type'], "is_lwp")
 
-		if expiry_date:
-			create_ledger_entry_for_intermediate_allocation_expiry(leave_data,expiry_date, submit, lwp)
-		else:
-			raise_exception = True
-			if frappe.flags.in_patch:
-				raise_exception=False
+# 		if expiry_date:
+# 			create_ledger_entry_for_intermediate_allocation_expiry(leave_data,expiry_date, submit, lwp)
+# 		else:
+# 			raise_exception = True
+# 			if frappe.flags.in_patch:
+# 				raise_exception=False
 
-			args = dict(
-				leaves=aList['total_leave_days'] * -1,
-				from_date=aList['from_date'],
-				to_date=aList['to_date'],
-				is_lwp=lwp,
-				holiday_list=get_holiday_list_for_employee(aList['employee'], raise_exception=raise_exception) or ''
-			)
-			create_leave_ledger_entry(leave_data, args, submit)
+# 			args = dict(
+# 				leaves=aList['total_leave_days'] * -1,
+# 				from_date=aList['from_date'],
+# 				to_date=aList['to_date'],
+# 				is_lwp=lwp,
+# 				holiday_list=get_holiday_list_for_employee(aList['employee'], raise_exception=raise_exception) or ''
+# 			)
+# 			create_leave_ledger_entry(leave_data, args, submit)
 
-def create_ledger_entry_for_intermediate_allocation_expiry(leave_data, expiry_date, submit, lwp):
-		''' splits leave application into two ledger entries to consider expiry of allocation '''
-		aList = json.loads(leave_data)
-		raise_exception = True
-		if frappe.flags.in_patch:
-			raise_exception=False
+# def create_ledger_entry_for_intermediate_allocation_expiry(leave_data, expiry_date, submit, lwp):
+# 		''' splits leave application into two ledger entries to consider expiry of allocation '''
+# 		aList = json.loads(leave_data)
+# 		raise_exception = True
+# 		if frappe.flags.in_patch:
+# 			raise_exception=False
 
-		args = dict(
-			from_date=aList['from_date'],
-			to_date=expiry_date,
-			leaves=(date_diff(expiry_date, aList['from_date']) + 1) * -1,
-			is_lwp=lwp,
-			holiday_list=get_holiday_list_for_employee(aList['employee'], raise_exception=raise_exception) or ''
-		)
-		create_leave_ledger_entry(leave_data, args, submit)
+# 		args = dict(
+# 			from_date=aList['from_date'],
+# 			to_date=expiry_date,
+# 			leaves=(date_diff(expiry_date, aList['from_date']) + 1) * -1,
+# 			is_lwp=lwp,
+# 			holiday_list=get_holiday_list_for_employee(aList['employee'], raise_exception=raise_exception) or ''
+# 		)
+# 		create_leave_ledger_entry(leave_data, args, submit)
 
-		if getdate(expiry_date) != getdate(leave_data.to_date):
-			start_date = add_days(expiry_date, 1)
-			args.update(dict(
-				from_date=start_date,
-				to_date=aList['to_date'],
-				leaves=date_diff(aList['to_date'], expiry_date) * -1
-			))
-			create_leave_ledger_entry(leave_data, args, submit)
+# 		if getdate(expiry_date) != getdate(leave_data.to_date):
+# 			start_date = add_days(expiry_date, 1)
+# 			args.update(dict(
+# 				from_date=start_date,
+# 				to_date=aList['to_date'],
+# 				leaves=date_diff(aList['to_date'], expiry_date) * -1
+# 			))
+# 			create_leave_ledger_entry(leave_data, args, submit)
 			
-def notify_employee(leave_data):
-		aList = json.loads(leave_data)
-		employee = frappe.get_doc("Employee", aList['employee'])
-		if not employee.user_id:
-			return
+# def notify_employee(leave_data):
+# 		aList = json.loads(leave_data)
+# 		employee = frappe.get_doc("Employee", aList['employee'])
+# 		if not employee.user_id:
+# 			return
 
-		parent_doc = frappe.get_doc('Leave Application', aList['name'])
-		args = parent_doc.as_dict()
+# 		parent_doc = frappe.get_doc('Leave Application', aList['name'])
+# 		args = parent_doc.as_dict()
 
-		template = frappe.db.get_single_value('HR Settings', 'leave_status_notification_template')
-		if not template:
-			frappe.msgprint(_("Please set default template for Leave Status Notification in HR Settings."))
-			return
-		email_template = frappe.get_doc("Email Template", template)
-		message = frappe.render_template(email_template.response, args)
+# 		template = frappe.db.get_single_value('HR Settings', 'leave_status_notification_template')
+# 		if not template:
+# 			frappe.msgprint(_("Please set default template for Leave Status Notification in HR Settings."))
+# 			return
+# 		email_template = frappe.get_doc("Email Template", template)
+# 		message = frappe.render_template(email_template.response, args)
 
-		notify_emp(leave_data,{
-			# for post in messages
-			"message": message,
-			"message_to": employee.user_id,
-			# for email
-			"subject": email_template.subject,
-			"notify": "employee"
-		})
+# 		notify_emp(leave_data,{
+# 			# for post in messages
+# 			"message": message,
+# 			"message_to": employee.user_id,
+# 			# for email
+# 			"subject": email_template.subject,
+# 			"notify": "employee"
+# 		})
 
 @frappe.whitelist()
 def Get_EL_Balance(employee):
