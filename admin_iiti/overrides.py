@@ -287,6 +287,7 @@ class CustomLeaveApplication(Document):
 
 	def create_leave_ledger_entry(self, submit=True):
 		if self.status != 'Approved' and submit:
+			frappe.throw(self.status)
 			return
 			
 		#expiry_date = get_allocation_expiry(self.employee, self.leave_type,
@@ -690,21 +691,7 @@ def set_leave_status(leave_application_name,action_type,total_recommender,recomm
 		frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Rejected'},update_modified=False)
 		
 	if action_type=='approved':
-		#frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Approved'},update_modified=False)
-		#leave_status = "Approved"
-		#ld = frappe.get_doc("Leave Application",leave_application_name)\
-		# aList = json.loads(leave_data)
-		# aList['status'] = "Approved"
-		# aList = json.dumps(aList)
-		# validate_back_dated_application(leave_data)
-		# update_attendance(leave_data,leave_status)
-
-		# # notify leave applier about approval
-		# if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-		# 	notify_employee(leave_data)
-
-		# 	create_leave_ledger_entry(leave_data)
-
+		frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Approved'},update_modified=False)
 		if leave_type == 'Vacation Leave':
 			El_update(leave_application_name)
 	

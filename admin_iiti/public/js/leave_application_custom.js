@@ -206,11 +206,11 @@ frappe.ui.form.on("Leave Application", {
 							frm.toggle_display("recommended_", true);
 							frm.toggle_display("not_recommonded", false);
 							frm.remove_custom_button('recommended_');
-							document.querySelectorAll("[data-fieldname='recommended_']")[1].style.backgroundColor="green";
+							document.querySelectorAll("[data-fieldname='recommended_']")[1].style.backgroundColor="#09cc09";
 						}else if(frm.doc.status=="Rejected"){
 							frm.toggle_display("recommended_", false);
 							frm.toggle_display("not_recommonded", true);
-							document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.backgroundColor="red";
+							document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.backgroundColor="#f73636";
 						}else{
                             frm.toggle_display("recommended_", true);
 							frm.toggle_display("not_recommonded", true);
@@ -243,11 +243,11 @@ frappe.ui.form.on("Leave Application", {
 							frm.toggle_display("recommended_", true);
 							frm.toggle_display("not_recommonded", false);
 							frm.remove_custom_button('recommended_');
-							document.querySelectorAll("[data-fieldname='recommended_']")[1].style.backgroundColor="green";
+							document.querySelectorAll("[data-fieldname='recommended_']")[1].style.backgroundColor="#09cc09";
 						}else if(frm.doc.status=="Rejected"){
 							frm.toggle_display("recommended_", false);
 							frm.toggle_display("not_recommonded", true);
-							document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.backgroundColor="red";
+							document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.backgroundColor="#f73636";
 						}else{
 							frm.toggle_display("recommended_", true);
 							frm.toggle_display("not_recommonded", true);
@@ -278,11 +278,11 @@ frappe.ui.form.on("Leave Application", {
 						if(frm.doc.recommender_third==1){
 							frm.toggle_display("recommended_", true);
 							frm.toggle_display("not_recommonded", false);
-							document.querySelectorAll("[data-fieldname='recommended_']")[1].style.backgroundColor="green";
+							document.querySelectorAll("[data-fieldname='recommended_']")[1].style.backgroundColor="#09cc09";
 						}else if(frm.doc.status=="Rejected"){
 							frm.toggle_display("recommended_", false);
 							frm.toggle_display("not_recommonded", true);
-							document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.backgroundColor="red";
+							document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.backgroundColor="#f73636";
 						}else{
 							frm.toggle_display("recommended_", true);
 							frm.toggle_display("not_recommonded", true);
@@ -312,11 +312,11 @@ frappe.ui.form.on("Leave Application", {
 						if(frm.doc.status=="Approved"){
 							frm.toggle_display("approved", true);
 							frm.toggle_display("not_approved", false);
-							document.querySelectorAll("[data-fieldname='approved']")[1].style.backgroundColor="green";
+							document.querySelectorAll("[data-fieldname='approved']")[1].style.backgroundColor="#09cc09";
 						}else if(frm.doc.status=="Rejected"){
 							frm.toggle_display("approved", false);
 							frm.toggle_display("not_approved", true);
-							document.querySelectorAll("[data-fieldname='not_approved']")[1].style.backgroundColor="red";
+							document.querySelectorAll("[data-fieldname='not_approved']")[1].style.backgroundColor="#f73636";
 						}else{
 							//frm.toggle_display("recommender_third",true);
 							frm.toggle_display("approved", true);
@@ -341,17 +341,17 @@ frappe.ui.form.on("Leave Application", {
 				// 	frm.set_df_property('status', 'options', ['Approved', 'Rejected','Cancelled'])
 				// }
 			}else{
-				if(frm.doc.leave_recommender_third){
-					frm.toggle_display("leave_recommender_third",true);
-				}else{
-					frm.toggle_display("leave_recommender_third",false);
-				}
+				// if(frm.doc.leave_recommender_third){
+				// 	frm.toggle_display("leave_recommender_third",true);
+				// }else{
+				// 	frm.toggle_display("leave_recommender_third",false);
+				// }
 
-				if(frm.doc.leave_recommender_second){
-					frm.toggle_display("leave_recommender_second",true);
-				}else{
-					frm.toggle_display("leave_recommender_second",false);
-				}
+				// if(frm.doc.leave_recommender_second){
+				// 	frm.toggle_display("leave_recommender_second",true);
+				// }else{
+				// 	frm.toggle_display("leave_recommender_second",false);
+				// }
 
 				frm.set_df_property('status', 'options', ['Open','Cancelled'])
 				frm.toggle_display("recommender_first", false);
@@ -558,13 +558,27 @@ function change_leave_status(frm,leave_application_name,action_type,total_recomm
 				//console.log('r',r)
 				if(r.message=='recommond'){
 					frappe.msgprint('You have recommended successfully');
+					frm.toggle_display("recommended_", true);
+					frm.toggle_display("not_recommonded", false);
+					document.querySelectorAll("[data-fieldname='recommended_']")[1].style.backgroundColor="#09cc09";
 					cur_frm.save();
 				}else if(r.message=='not_recommond'){
 					frappe.msgprint('You have Not recommended successfully');
+					frm.toggle_display("recommended_", false);
+					frm.toggle_display("not_recommonded", true);
+					document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.backgroundColor="#f73636";
+					cur_frm.save();
 				}else if(r.message=='not_approved'){
 					frappe.msgprint('You have Not approved successfully');
+					frm.toggle_display("approved", false);
+					frm.toggle_display("not_approved", true);
+					document.querySelectorAll("[data-fieldname='not_approved']")[1].style.backgroundColor="#f73636";
+					cur_frm.save();
 				}else if(r.message=='approved'){
 					frappe.msgprint('You have approved successfully');
+					frm.toggle_display("approved", true);
+					frm.toggle_display("not_approved", false);
+					document.querySelectorAll("[data-fieldname='approved']")[1].style.backgroundColor="#09cc09";
 					cur_frm.savesubmit();
 					// frappe.call({
 					// 	"method": "frappe.client.submit",
