@@ -48,7 +48,10 @@ frappe.ui.form.on("Leave Application", {
 	//show alert message for number of taken leave is not greater than allocated leave 
 	to_date: function(frm) {
 		
-		console.log(frm.doc.leave_balance);
+		if(frm.doc.to_date){
+
+
+		}
 		
 	},
 	//end show alert message for number of taken leave is not greater than allocated leave 
@@ -163,7 +166,7 @@ frappe.ui.form.on("Leave Application", {
 	},
 
 	employee: function(frm) {
-		//frm.trigger("make_dashboard");
+		//frm.trigger("make_get_leave_balancedashboard");
 		frm.trigger("get_leave_balance");
 		frm.trigger("set_leave_approver");
 		frm.trigger("set_leave_recommender");
