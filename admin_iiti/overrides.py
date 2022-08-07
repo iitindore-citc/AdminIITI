@@ -717,9 +717,21 @@ def El_update(leave_application_name):
 	El_balance = frappe.db.get_value("Leave Allocation",{"employee":data.employee,"leave_type_name": 'Earned Leave'},"total_leaves_allocated")
 
 	new_El_balance  = El_balance - total_no_leaves/2
+	
 	#update monthcount = 12
-	frappe.db.set_value("Leave Allocation", {'employee':data.employee,'leave_type_name':'Earned Leave'},{'new_leaves_allocated': new_El_balance, 'total_leaves_allocated': new_El_balance}, update_modified=False)
+	# frappe.db.set_value("Leave Allocation", {'employee':data.employee,'leave_type_name':'Earned Leave'},{'new_leaves_allocated': new_El_balance, 'total_leaves_allocated': new_El_balance}, update_modified=False)
 	
 
-    #update ledger leave entry
-	frappe.db.set_value("Leave Ledger Entry", {'transaction_name':Leave_allocation.name},{'leaves': new_El_balance}, update_modified=False)
+    #Insert ledger leave entry
+
+	# doc = frappe.get_doc(dict(
+	# 	doctype='Leave Ledger Entry',
+	# 	transaction_name = Leave_allocation.name,
+	# 	leaves= -new_El_balance,
+	# 	from_date=self.from_date,
+	# 	to_date=self.to_date,
+	# 	is_lwp=lwp,
+	# 	holiday_list=get_holiday_list_for_employee(self.employee, raise_exception=raise_exception) or ''
+	# 	))
+	# doc.insert()
+	# frappe.db.set_value("Leave Ledger Entry", {'transaction_name':Leave_allocation.name},{'leaves': new_El_balance}, update_modified=False)

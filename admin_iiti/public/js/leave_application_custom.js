@@ -50,7 +50,9 @@ frappe.ui.form.on("Leave Application", {
 		
 		if(frm.doc.to_date){
 
-
+			frm.trigger("half_day_datepicker");
+			frm.trigger("calculate_total_days");
+			frm.trigger("get_leave_balance_for_check");
 		}
 		
 	},
@@ -117,6 +119,90 @@ frappe.ui.form.on("Leave Application", {
 				}
 			}
 		});
+	},
+
+	get_leave_balance_for_check: function(frm) {
+		
+		if (frm.doc.docstatus === 0 && frm.doc.employee && frm.doc.leave_type && frm.doc.from_date && frm.doc.to_date) {
+			return frappe.call({
+				method: "erpnext.hr.doctype.leave_application.leave_application.get_leave_balance_on",
+				args: {
+					employee: frm.doc.employee,
+					date: frm.doc.from_date,
+					to_date: frm.doc.to_date,
+					leave_type: frm.doc.leave_type,
+					consider_all_leaves_in_the_allocation_period: true
+				},
+				callback: function (r) {
+					if (!r.exc && r.message) {
+
+						var total_leave_balance = r.message;
+					} else {
+						var total_leave_balance = 0;
+						
+					}
+					var leave_days = frm.doc.total_leave_days;
+
+					if(total_leave_balance < leave_days ){
+
+						frappe.msgprint(__("There is not enough leave balance for this Leave Type"));
+						frm.set_value("to_date", "")
+						//frm.set_value("total_leave_days","");
+					}
+					//check validaton for  vacation leave Period 
+
+					if(frm.doc.leave_type_name == "Vacation Leave"){
+
+						//check 10 maximun leave take for vaction leave 
+
+						if(leave_days < 10){
+
+							frappe.msgprint(__("You have to take maximum of 10 days for vacation leave."));
+						}
+
+						//end validation
+
+						// check Leave dates between vacation period 
+
+						frm.trigger('check_vacation_period');
+
+						//end validation 
+
+					}
+				}
+			});
+		}
+	},
+
+	check_vacation_period:function(frm){
+
+		frappe.call({
+			method: "frappe.client.get_value",
+			args: {
+				doctype: "Leave Type",
+				filters: {
+					"leave_type":frm.doc.leave_type_name,
+					"vacation_form_date":['<=',frm.doc.from_date],
+					"vacation_to_date":['>=',frm.doc.to_date]
+					
+				},
+				fieldname: ["name","vacation_form_date","vacation_to_date","vacation_leave_type"]
+			},
+			callback: function(r){
+				console.log(r.message)
+				var data = r.message
+				if(!data.name){
+					frappe.msgprint(__("Your Leave Dates are out of the vacation  ."));
+					frm.set_value("to_date", "")
+					frm.set_value("from_date","");
+					frm.set_value("leave_type","");
+					//frm.set_value("total_leave_days","");
+				}
+				
+			}
+		});
+
+
 	},
 
     make_dashboard: function(frm) {
@@ -386,42 +472,78 @@ frappe.ui.form.on("Leave Application", {
 		if(frm.doc.leave_type && frm.doc.employee && frm.doc.from_date && frm.doc.to_date){
 
 			if(frm.doc.ltc_leave){
-
-				frappe.call({
-					"method": "frappe.client.get_value",
-					"args": {
-						doctype: "Employee",
-						filters: [
-							["name", "=", frm.doc.employee]
-						],
-						fieldname: "date_of_joining"
-					},
-					"callback": function (response) {
-						var data = response.message;
-		
-						var one_year_date = frappe.datetime.add_days(data.date_of_joining, 365)
-		
-						var current_date = frappe.datetime.nowdate();
-		
-						if (one_year_date > current_date) {
-		
-							frappe.msgprint(__("After One Year Services Than you Can Applied LTC."));
-		
-						}
-					}
-				});
-	
-				employee_dependent_get(frm.doc.employee);
+				
+				frm.trigger('one_year_service');
+				frm.trigger('employee_dependent_get');
 
 			}
-		}else{
-
-			frappe.msgprint(__("Please Select Required Fields"));
-			frm.set_value("ltc_leave","");
 		}
 
-		
+	},
+	one_year_service:function(frm){
+		frappe.call({
+			"method": "frappe.client.get_value",
+			"args": {
+				doctype: "Employee",
+				filters: [
+					["name", "=", frm.doc.employee]
+				],
+				fieldname: "date_of_joining"
+			},
+			"callback": function (response) {
+				var data = response.message;
 
+				var one_year_date = frappe.datetime.add_days(data.date_of_joining, 365)
+
+				console.log("one_year_date",one_year_date);
+
+				var current_date = frappe.datetime.nowdate();
+
+				if (one_year_date > current_date) {
+
+					frappe.msgprint(__("After One Year Services Than you Can Applied LTC."));
+
+				}
+			}
+		});
+	},
+	employee_dependent_get:function(frm){
+
+		frappe.call({
+			"method": "frappe.client.get_list",
+			"args": {
+				doctype: "Employee Dependent Details",
+				filters: [
+					["parent", "=", frm.doc.employee]
+				],
+				parent: 'Employee',
+				fields:['dependent_name','date_of_birth','relation']
+			},
+			
+			"callback": function (response) {
+				
+				var depended = response.message;
+				console.log(depended);
+				if(depended.length >0){
+					cur_frm.clear_table('ltc_claimed');
+	
+					depended.forEach(function (item) {
+						var age = get_age(item.date_of_birth);
+		
+						var child = cur_frm.add_child('ltc_claimed');
+						frappe.model.set_value(child.doctype, child.name, 'family_members', item.dependent_name);
+						frappe.model.set_value(child.doctype, child.name, 'age', age);
+						frappe.model.set_value(child.doctype, child.name, 'relationship', item.relation);
+				
+					});
+				}else{
+					cur_frm.clear_table('ltc_claimed');
+				}
+				
+				cur_frm.refresh_field('ltc_claimed');
+	
+			}
+		});
 	},
 	leave_type:function(frm){
 		if(frm.doc.leave_type == 'Casual Leave'){
@@ -629,46 +751,6 @@ function set_button_color(){
 	document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.backgroundColor="#2490ef";
 	document.querySelectorAll("[data-fieldname='approved']")[1].style.backgroundColor="#2490ef";
 	document.querySelectorAll("[data-fieldname='not_approved']")[1].style.backgroundColor="#2490ef";
-}
-
-function employee_dependent_get(employee) {
-	frappe.call({
-		"method": "frappe.client.get_list",
-		"args": {
-			doctype: "Employee Dependent Details",
-			filters: [
-				["parent", "=", employee]
-			],
-			parent: 'Employee',
-			fields:['dependent_name','date_of_birth','relation']
-		},
-		
-		"callback": function (response) {
-			
-			var depended = response.message;
-			console.log(depended);
-			if(depended.length >0){
-				cur_frm.clear_table('ltc_claimed');
-
-				depended.forEach(function (item) {
-					var age = get_age(item.date_of_birth);
-	
-					var child = cur_frm.add_child('ltc_claimed');
-					frappe.model.set_value(child.doctype, child.name, 'family_members', item.dependent_name);
-					frappe.model.set_value(child.doctype, child.name, 'age', age);
-					frappe.model.set_value(child.doctype, child.name, 'relationship', item.relation);
-			
-				});
-			}else{
-				cur_frm.clear_table('ltc_claimed');
-			}
-			
-			cur_frm.refresh_field('ltc_claimed');
-
-		}
-	});
-	//for removing first row of child table
-	//cur_frm.get_field("items").grid.grid_rows[0].remove();
 }
 
 function get_age(birth){
