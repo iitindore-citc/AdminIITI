@@ -1,83 +1,71 @@
 {
  "actions": [],
  "allow_rename": 1,
- "creation": "2022-08-05 17:58:27.125348",
+ "autoname": "field:position",
+ "creation": "2022-08-08 15:12:16.341967",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
   "position",
   "leave_type",
-  "column_break_3",
-  "leave_type_name",
   "first_recommender",
   "second_recommender",
-  "column_break_7",
   "third_recommender",
-  "approving_authority"
+  "approver"
  ],
  "fields": [
   {
    "fieldname": "position",
    "fieldtype": "Link",
-   "in_list_view": 1,
    "label": "Position",
    "options": "Employee Position",
-   "reqd": 1
+   "unique": 1
   },
   {
    "fieldname": "leave_type",
    "fieldtype": "Link",
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Leave Type",
-   "options": "Leave Type",
-   "reqd": 1
-  },
-  {
-   "fieldname": "column_break_3",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "leave_type_name",
-   "fieldtype": "Data",
-   "hidden": 1,
-   "label": "Leave Type Name"
+   "options": "Leave type options"
   },
   {
    "fieldname": "first_recommender",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "First Recommender",
-   "options": "User"
+   "options": "Employee Position"
   },
   {
    "fieldname": "second_recommender",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Second Recommender",
-   "options": "User"
-  },
-  {
-   "fieldname": "column_break_7",
-   "fieldtype": "Column Break"
+   "options": "Employee Position"
   },
   {
    "fieldname": "third_recommender",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Third Recommender",
-   "options": "User"
+   "options": "Employee Position"
   },
   {
-   "fieldname": "approving_authority",
+   "fieldname": "approver",
    "fieldtype": "Link",
-   "label": "Approving Authority",
-   "options": "User"
+   "in_list_view": 1,
+   "label": "Approver",
+   "options": "Employee Position"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-08-05 18:11:39.247199",
+ "modified": "2022-08-08 15:17:21.600499",
  "modified_by": "Administrator",
  "module": "Admin IITI",
  "name": "Leave Authority",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {
@@ -93,9 +81,7 @@
    "write": 1
   }
  ],
- "search_fields": "position",
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": [],
- "title_field": "position"
+ "states": []
 }
