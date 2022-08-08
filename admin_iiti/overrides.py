@@ -693,7 +693,7 @@ def set_leave_status(leave_application_name,action_type,total_recommender,recomm
 	if action_type=='approved':
 		frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Approved'},update_modified=False)
 		if leave_type == 'Vacation Leave':
-			El_update(leave_application_name,leave_data)
+			El_update(leave_data)
 	
 	return action_type
 
@@ -705,13 +705,19 @@ def Get_EL_Balance(employee):
 	
 	return data
 
-def El_update(leave_application_name,leave_data):
+def El_update(leave_data):
 
 	vacation_leave_data = json.loads(leave_data)
 
 	El_balance = frappe.db.get_value("Leave Allocation",{"employee":vacation_leave_data['employee'],"leave_type_name": 'Earned Leave'},"total_leaves_allocated",as_dict=1)
 
 	##frappe.throw(frappe.as_json(vacation_leave_data))
+
+	add_number_of_days = vacation_leave_data['total_leave_days']/2
+
+	##new_to_date = add_days(vacation_leave_data['from_date'],add_number_of_days)
+
+	##frappe.throw(add_number_of_days)
 
 	#:p EL Leave application Create
 
@@ -723,7 +729,7 @@ def El_update(leave_application_name,leave_data):
 	El.leave_balance = El_balance.total_leaves_allocated
 	El.from_date = vacation_leave_data['from_date']
 	El.to_date = vacation_leave_data['to_date']
-	El.total_leave_days = vacation_leave_data['total_leave_days']
+	El.total_leave_days = vacation_leave_data['total_leave_days']/2
 	El.status ='Approved'
 	El.leave_type_name = 'Earned Leave'
 	El.flags.ignore_validate = True
@@ -733,20 +739,14 @@ def El_update(leave_application_name,leave_data):
 
 	El_application = frappe.get_last_doc('Leave Application')
 
-	new_El_balance  = total_no_leaves/2
+	new_El_balance  = vacation_leave_data['total_leave_days']/2
 
 	if El_application:
 		doc = frappe.new_doc("Leave Ledger Entry")
-		# leaves_update = frappe._dict(
-		# 	doctype='Leave Ledger Entry',
-		# 	leaves= new_El_balance * -1,
-		# 	docstatus = 1,
-		# )
-		#doc.update(leaves_update)
 		doc.employee = vacation_leave_data['employee']
 		doc.employee_name = vacation_leave_data['employee_name']
 		doc.leave_type = 'Earned Leave'
-		doc.transaction_type = 'Leave Allocation'
+		doc.transaction_type = 'Leave Application'
 		doc.transaction_name = El_application.name
 		doc.leaves = new_El_balance * -1
 		doc.company = 'IITI'
@@ -758,44 +758,3 @@ def El_update(leave_application_name,leave_data):
 		doc.docstatus = 1
 		##frappe.throw(frappe.as_json(doc))
 		doc.db_insert()
-
-
-
-
-
-	# data  = frappe.db.get_value("Leave Application",{"name":leave_application_name,"status": 'Approved'},["employee","total_leave_days"],as_dict=1)
-
-	# Leave_allocation = frappe.db.get_value("Leave Allocation",{"employee":data.employee,"leave_type_name": 'Earned Leave'},["name","employee","employee_name"],as_dict=1)
-
-	# ##convert_json_data = frappe.as_json(Leave_allocation)
-
-	# total_no_leaves = data.total_leave_days
-
-	# El_balance = frappe.db.get_value("Leave Allocation",{"employee":data.employee,"leave_type_name": 'Earned Leave'},"total_leaves_allocated")
-
-	# new_El_balance  = total_no_leaves/2
-
-    # #Update ledger leave entry
-
-	# doc = frappe.new_doc("Leave Ledger Entry")
-	# # leaves_update = frappe._dict(
-	# # 	doctype='Leave Ledger Entry',
-	# # 	leaves= new_El_balance * -1,
-	# # 	docstatus = 1,
-	# # )
-	# #doc.update(leaves_update)
-	# doc.employee = all_leave_data['employee']
-	# doc.employee_name = all_leave_data['employee_name']
-	# doc.leave_type = 'Earned Leave'
-	# doc.transaction_type = 'Leave Allocation'
-	# doc.transaction_name = Leave_allocation.name
-	# doc.leaves = new_El_balance * -1
-	# doc.company = 'IITI'
-	# doc.from_date = all_leave_data['from_date']
-	# doc.to_date =all_leave_data['to_date']
-	# doc.holiday_list=get_holiday_list_for_employee(Leave_allocation['employee'], raise_exception=True) or ''
-	# doc.flags.ignore_validate = True
-	# doc.flags.ignore_permissions = 1
-	# doc.docstatus = 1
-	# ##frappe.throw(frappe.as_json(doc))
-	# doc.db_insert()

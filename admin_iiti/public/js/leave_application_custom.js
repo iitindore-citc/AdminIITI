@@ -1,14 +1,44 @@
 cur_frm.add_fetch('leave_type', 'leave_type', 'leave_type_name');
 frappe.ui.form.on("Leave Application", {
 	refresh:function(frm){
-		console.log(frm);
-        
-		//set leave status change button
-		// frm.toggle_display("recommended_", false);
-		// frm.toggle_display("not_recommonded", false);
-		// frm.toggle_display("approved", false);
-		// frm.toggle_display("not_approved", false);
-		//set leave status change button
+		var employee = frm.doc.employee;
+	
+		frappe.call({
+			"method": "frappe.client.get_list",
+			"args": {
+				doctype: "Employee Position Details",
+				filters: [
+					["parent", "=", employee]
+				],
+				parent: 'Employee',
+				fields:["position"],
+			},
+			
+			"callback": function (response) {
+				var position_data = response.message;
+				//console.log(position_data.length)
+				var positions = [];
+				if (position_data.length>0){
+					position_data.forEach(function (item) {
+						positions.push(item.position);
+					});
+
+					if(positions.length>0){
+						if(positions.indexOf("Associate Dean") !== -1){
+							alert("Yes, He is associate Dean")
+						}else if(positions.indexOf("Dean") !== -1){
+							alert("Yes, He is Dean")
+						}
+						else if(positions.indexOf("Head of Department or School") !== -1){
+							alert("Yes, He is Head of Department or School")
+						}
+						else if(positions.indexOf("Faculty Members") !== -1){
+							alert("Yes, He is Faculty Members")
+						}
+					}
+				}
+			}
+		});
 	},
 	from_date: function(frm){
 		   //set to date is not less than from date
