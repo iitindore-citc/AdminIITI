@@ -1,0 +1,241 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2022-08-09 15:56:15.158625",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "employee",
+  "employee_name",
+  "pay_level",
+  "column_break_3",
+  "leave_application",
+  "leave_type",
+  "leave_type_name",
+  "department",
+  "section_break_8",
+  "specify_whether",
+  "destination",
+  "nearest_railway",
+  "leave_encashment",
+  "column_break_13",
+  "departure_date",
+  "arrival_date",
+  "encashment_days",
+  "column_break_17",
+  "block_year",
+  "mode_of_travel",
+  "class_of_journey",
+  "ltc_advance_amount",
+  "ltc_details_section",
+  "ltc_claimed",
+  "i_undertake_section",
+  "undertake_a",
+  "undertake_b",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Employee",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "leave_type",
+   "fieldtype": "Data",
+   "label": "Leave Type",
+   "read_only": 1
+  },
+  {
+   "fieldname": "leave_type_name",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Leave Type Name"
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department",
+   "options": "Department"
+  },
+  {
+   "fieldname": "pay_level",
+   "fieldtype": "Data",
+   "label": "Pay Level"
+  },
+  {
+   "fieldname": "section_break_8",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "specify_whether",
+   "fieldtype": "Select",
+   "label": "Specify Whether",
+   "options": "\nHome Town\nAny Where"
+  },
+  {
+   "fieldname": "destination",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Destination",
+   "reqd": 1
+  },
+  {
+   "fieldname": "nearest_railway",
+   "fieldtype": "Data",
+   "label": "Nearest Railway"
+  },
+  {
+   "default": "0",
+   "fieldname": "leave_encashment",
+   "fieldtype": "Check",
+   "label": "Leave Encashment"
+  },
+  {
+   "fieldname": "column_break_13",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "departure_date",
+   "fieldtype": "Date",
+   "label": "Departure Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "arrival_date",
+   "fieldtype": "Data",
+   "label": "Arrival Date",
+   "reqd": 1
+  },
+  {
+   "default": "10",
+   "depends_on": "leave_encashment",
+   "fieldname": "encashment_days",
+   "fieldtype": "Data",
+   "label": "Encashment Days",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_17",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "2022-2025",
+   "fieldname": "block_year",
+   "fieldtype": "Data",
+   "label": "Block Year",
+   "read_only": 1
+  },
+  {
+   "fieldname": "mode_of_travel",
+   "fieldtype": "Select",
+   "label": "Mode of Travel",
+   "options": "\nAir\nTrain\nBus"
+  },
+  {
+   "fieldname": "class_of_journey",
+   "fieldtype": "Data",
+   "label": "Class of Journey"
+  },
+  {
+   "depends_on": "leave_encashment",
+   "fieldname": "ltc_advance_amount",
+   "fieldtype": "Data",
+   "label": "LTC Advance Amount"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "LTC Request",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "AD-LTC-.YYYY.-",
+   "reqd": 1
+  },
+  {
+   "fieldname": "ltc_details_section",
+   "fieldtype": "Section Break",
+   "label": "LTC Details"
+  },
+  {
+   "fieldname": "ltc_claimed",
+   "fieldtype": "Table",
+   "label": "LTC Claimed",
+   "options": "LTC Claimed Details"
+  },
+  {
+   "fieldname": "leave_application",
+   "fieldtype": "Link",
+   "label": "Leave Application",
+   "options": "Leave Application",
+   "reqd": 1
+  },
+  {
+   "fieldname": "i_undertake_section",
+   "fieldtype": "Section Break",
+   "label": "I undertake"
+  },
+  {
+   "default": "0",
+   "description": "To furnish the adjustment bill within one month from the date of completion of return journey when advance is drown or within three months when advance is not drown.",
+   "fieldname": "undertake_a",
+   "fieldtype": "Check",
+   "label": "A"
+  },
+  {
+   "default": "0",
+   "description": "To Produce air tickets with stamped boarding pass/railway tickets/bus cash receipts (public transport only ) for both the onward as well as return journeys.",
+   "fieldname": "undertake_b",
+   "fieldtype": "Check",
+   "label": "B"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2022-08-09 16:48:35.601402",
+ "modified_by": "Administrator",
+ "module": "Admin IITI",
+ "name": "LTC Request",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

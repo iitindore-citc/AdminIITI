@@ -395,6 +395,17 @@ def check_delegate(user):
 		user = ""
 	return user
 
+@frappe.whitelist()
+def get_employee_by_position(department,position):
+	if position=="HOD":
+		values = {'department': department,"position":position}
+		employee_postion_detail = frappe.db.sql("SELECT epd.*,e.user_id FROM `tabEmployee Position Details` as epd INNER JOIN `tabEmployee` as e on epd.parent=e.name WHERE epd.department=%(department)s and epd.position=%(position)s",values=values,as_dict=True)
+		return employee_postion_detail
+	else:
+		values = {"position":position}
+		employee_postion_detail = frappe.db.sql("SELECT epd.*,e.user_id FROM `tabEmployee Position Details` as epd INNER JOIN `tabEmployee` as e on epd.parent=e.name WHERE epd.position=%(position)s",values=values,as_dict=True)
+		return employee_postion_detail
+
 def notify_leave_approver(self):
 		if self.leave_approver:
 			parent_doc = frappe.get_doc('Leave Application', self.name)

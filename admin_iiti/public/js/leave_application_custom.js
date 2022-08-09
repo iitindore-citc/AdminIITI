@@ -1,44 +1,7 @@
 cur_frm.add_fetch('leave_type', 'leave_type', 'leave_type_name');
 frappe.ui.form.on("Leave Application", {
 	refresh:function(frm){
-		var employee = frm.doc.employee;
-	
-		frappe.call({
-			"method": "frappe.client.get_list",
-			"args": {
-				doctype: "Employee Position Details",
-				filters: [
-					["parent", "=", employee]
-				],
-				parent: 'Employee',
-				fields:["position"],
-			},
-			
-			"callback": function (response) {
-				var position_data = response.message;
-				//console.log(position_data.length)
-				var positions = [];
-				if (position_data.length>0){
-					position_data.forEach(function (item) {
-						positions.push(item.position);
-					});
-
-					if(positions.length>0){
-						if(positions.indexOf("Associate Dean") !== -1){
-							alert("Yes, He is associate Dean")
-						}else if(positions.indexOf("Dean") !== -1){
-							alert("Yes, He is Dean")
-						}
-						else if(positions.indexOf("Head of Department or School") !== -1){
-							alert("Yes, He is Head of Department or School")
-						}
-						else if(positions.indexOf("Faculty Members") !== -1){
-							alert("Yes, He is Faculty Members")
-						}
-					}
-				}
-			}
-		});
+		
 	},
 	from_date: function(frm){
 		   //set to date is not less than from date
@@ -90,10 +53,10 @@ frappe.ui.form.on("Leave Application", {
 
 	leave_encashment:function(frm){
 
-		if (frm.doc.total_leave_days <= 10) {
+		// if (frm.doc.total_leave_days <= 10) {
 
-			frappe.msgprint(__("You have to take maximum of 10 days for leave encashment."));
-		}
+		// 	frappe.msgprint(__("You have to take maximum of 10 days for leave encashment."));
+		// }
 
 		if (frm.doc.leave_encashment) {
 			frm.toggle_display("encashment_days", true);
@@ -292,7 +255,6 @@ frappe.ui.form.on("Leave Application", {
 	onload: function(frm) {
 			//set_button_color();
 			if (!frm.is_new()) {
-
 				frm.toggle_display("status", true);
 				frm.set_df_property('status', 'options', ['Open','Rejected'])
 
@@ -496,6 +458,7 @@ frappe.ui.form.on("Leave Application", {
 		
 	},
 	set_status_dropdown: function(frm) {
+	
 				if(frm.doc.leave_recommender==frappe.session.user){
 					frm.set_df_property('status', 'options', ['Open', 'Recommended','Rejected'])
 				}
@@ -588,6 +551,8 @@ frappe.ui.form.on("Leave Application", {
 		}else{
 			frm.toggle_display("half_day",false);
 		}
+       
+		set_leave_authority(frm);
 
 	},
 	foreign_leave:function(frm){
@@ -645,7 +610,228 @@ frappe.ui.form.on("Leave Application", {
 			});
 		}
 	},
+
+	prefix_from_date:function(frm){
+
+		var from_date = new Date(frm.doc.prefix_from_date);
+		var day = from_date.getDate();
+		var year = from_date.getFullYear();
+		var month = from_date.getMonth()+1;
+		cur_frm.fields_dict.prefix_to_date.datepicker.update({
+		minDate: new Date(year, month - 1, day)
+		});
+
+	},
+	prefix_to_date:function(frm){
+		if(frm.doc.prefix_leave_date && frm.doc.prefix_from_date && frm.doc.prefix_to_date){
+			var holiday_list
+			frappe.call({
+				method: "frappe.client.get_value",
+				args: {
+					doctype: "Company",
+					fieldname: "default_holiday_list"
+				},
+				callback: function(r){
+					holiday_list = r.message.default_holiday_list;
+					check_prefix(frm,holiday_list,frm.doc.prefix_from_date,frm.doc.prefix_to_date);
+				}
+			});
+
+		}
+	},
+
+	suffix_from_date:function(frm){
+
+		var from_date = new Date(frm.doc.suffix_from_date);
+		var day = from_date.getDate();
+		var year = from_date.getFullYear();
+		var month = from_date.getMonth()+1;
+		cur_frm.fields_dict.suffix_to_date.datepicker.update({
+		minDate: new Date(year, month - 1, day)
+		});
+
+	},
+	suffix_to_date:function(frm){
+		if(frm.doc.suffix_leave_date && frm.doc.suffix_from_date && frm.doc.suffix_to_date){
+			var holiday_list
+			frappe.call({
+				method: "frappe.client.get_value",
+				args: {
+					doctype: "Company",
+					fieldname: "default_holiday_list"
+				},
+				callback: function(r){
+					holiday_list = r.message.default_holiday_list;
+					check_suffix(frm,holiday_list,frm.doc.suffix_from_date,frm.doc.suffix_to_date);
+				}
+			});
+
+		}
+	},
+
+	advance_amount:function(frm){
+		var advance_amount = frm.doc.advance_amount;
+
+		var ninety_percent_ltc_amount = advance_amount *90/100;
+
+		frm.set_value('ninety_percent_ltc_amount',ninety_percent_ltc_amount);
+
+		console.log(frm.doc.ninety_percent_ltc_amount)
+	},
 })
+
+
+function set_leave_authority(frm){
+	var employee = frm.doc.employee;
+	var leave_type_name = frm.doc.leave_type_name;
+	
+		frappe.call({
+			"method": "frappe.client.get_list",
+			"args": {
+				doctype: "Employee Position Details",
+				filters: [
+					["parent", "=", employee]
+				],
+				parent: 'Employee',
+				fields:["position","department"],
+			},
+			"async": false,
+			"callback": function (response) {
+				var position_data = response.message;
+				var positions = [];//create position array to check employee position
+				var pd = [];//create position array with department, position as a key and department as a value
+				if (position_data.length>0){
+					position_data.forEach(function (item) {
+						positions.push(item.position);
+						pd[item.position] = item.department;
+					});//end foreach
+					if(positions.length>0){
+						var emp_position = "";
+						var emp_department = "";
+						if(positions.indexOf("Associate Dean") !== -1){
+							emp_position = "Associate Dean";
+							emp_department = pd['Associate Dean'];
+						}else if(positions.indexOf("Dean") !== -1){
+							emp_position = "Dean";
+							emp_department = pd['Dean'];
+						}
+						else if(positions.indexOf("Head of Department or School") !== -1){
+							emp_position = "Head of Department or School";
+							emp_department = pd['Head of Department or School'];
+						}
+						else if(positions.indexOf("Faculty Members") !== -1){
+							emp_position = "Faculty Members";
+							emp_department = pd['Faculty Members'];
+						}
+
+						var leave_authority = get_leave_authority(emp_position,leave_type_name);
+						var authority_count = Object.keys(leave_authority).length;
+						var fst_r_pos = "";
+						var snd_r_pos = "";
+						var thrd_r_pos = ""
+						var approver_pos = "";
+						if(authority_count){
+                            fst_r_pos = leave_authority.first_recommender;
+							snd_r_pos = leave_authority.second_recommender;
+							thrd_r_pos = leave_authority.third_recommender;
+							approver_pos = leave_authority.approver;
+						}else{
+							leave_authority = get_leave_authority(emp_position,"Other");
+							if(Object.keys(leave_authority).length>0){
+								fst_r_pos = leave_authority.first_recommender;
+								snd_r_pos = leave_authority.second_recommender;
+								thrd_r_pos = leave_authority.third_recommender;
+								approver_pos = leave_authority.approver;
+							}
+						}
+
+						console.log('first reco='+fst_r_pos);
+						console.log('second reco='+snd_r_pos);
+						console.log('third reco='+thrd_r_pos);
+						console.log('approver ='+approver_pos);
+						
+						if(fst_r_pos){
+							var fst_r_pos_email = get_employee_detail(emp_department,fst_r_pos);
+							if(fst_r_pos_email){
+								cur_frm.set_value('leave_recommender',fst_r_pos_email);
+							}
+						}else{
+							cur_frm.set_value('leave_recommender','');
+						}
+						
+						if(snd_r_pos){
+							var snd_r_pos_email = get_employee_detail(emp_department,snd_r_pos);
+							if(snd_r_pos_email){
+								cur_frm.set_value('leave_recommender_second',snd_r_pos_email);
+							}else{
+								cur_frm.set_value('leave_recommender_second','');
+							}
+						}else{
+							cur_frm.set_value('leave_recommender_second','');
+						}
+						if(thrd_r_pos){
+							var thrd_r_pos_email = get_employee_detail(emp_department,thrd_r_pos);
+							if(thrd_r_pos_email){
+								cur_frm.set_value('leave_recommender_third',thrd_r_pos_email);
+							}else{
+								cur_frm.set_value('leave_recommender_third','');
+							}
+						}else{
+							cur_frm.set_value('leave_recommender_third','');
+						}
+						if(approver_pos){
+							var approver_pos_email = get_employee_detail(emp_department,approver_pos);
+							if(approver_pos_email){
+								cur_frm.set_value('leave_approver',approver_pos_email);
+							}else{
+								cur_frm.set_value('leave_approver','');
+							}
+						}else{
+							cur_frm.set_value('leave_approver','');
+						}
+					}//end if position.length
+				}//end if positon_data.length
+			}
+		});
+}
+
+function get_employee_detail(department,position){
+    var email = "";
+	frappe.call({
+		method: "admin_iiti.overrides.get_employee_by_position",
+		async: false,
+		args: {
+			"department": department,
+			"position":position
+		},
+		callback: function (r) {
+		     if(r.message.length>0){
+                email = r.message[0].user_id;
+			 }
+		}
+	});
+	return email;
+}
+
+function get_leave_authority(position,leave_type){
+	var leave_authority = [];
+	frappe.call({
+		method: "frappe.client.get_value",
+		args: {
+			doctype: "Leave Authority",
+			filters: {
+				"position":position,
+				"leave_type":leave_type
+			},
+			fieldname: ["*"]
+		},
+		async: false,
+		callback: function(r){
+	        leave_authority=r.message;
+		} 
+	});
+    return leave_authority;
+}
 
 function change_leave_status(frm,leave_application_name,action_type,total_recommender){
 
@@ -801,5 +987,65 @@ function get_age(birth){
 	var years = age.getFullYear() - 1970;
 	//return years + " Year(s) " + age.getMonth() + " Month(s) " + age.getDate() + " Day(s)";
 	return years;
+
+}
+
+function check_prefix(frm,holiday_list,from_date,to_date){
+
+	frappe.call({
+		method: "frappe.client.get_list",
+		args: {
+			doctype: "Holiday",
+			filters: {
+				"parent":holiday_list,
+				"holiday_date":["between", [from_date,to_date]],
+				
+			},
+			fields: ["holiday_date"],
+			parent:"Holiday List"
+			
+		},
+		callback: function(r){
+			var data = r.message;
+			if(data.length == 0){
+
+				frappe.msgprint("You Can not check Prefix Leave day");
+				frm.set_value('prefix_leave_date','');
+				frm.set_value('prefix_from_date','');
+				frm.set_value('prefix_to_date','');
+
+			}
+		}
+	});
+
+}
+
+function check_suffix(frm,holiday_list,from_date,to_date){
+
+	frappe.call({
+		method: "frappe.client.get_list",
+		args: {
+			doctype: "Holiday",
+			filters: {
+				"parent":holiday_list,
+				"holiday_date":["between", [from_date,to_date]],
+				
+			},
+			fields: ["holiday_date"],
+			parent:"Holiday List"
+			
+		},
+		callback: function(r){
+			var data = r.message;
+			if(data.length == 0){
+
+				frappe.msgprint("You Can not check suffix Leave day");
+				frm.set_value('suffix_leave_date','');
+				frm.set_value('suffix_from_date','');
+				frm.set_value('suffix_to_date','');
+
+			}
+		}
+	});
 
 }
