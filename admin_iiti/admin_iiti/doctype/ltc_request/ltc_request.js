@@ -108,82 +108,93 @@ frappe.ui.form.on('LTC Request', {
 		}
 	},
 	check_El_Balance:function(frm){
-		console.log(frm.doc);
-
+	
 		var Application_data = get_application_details(frm.doc.leave_application);
 
-		console.log("Application_data",Application_data);
-		// frappe.call({
-		// 	method: "erpnext.hr.doctype.leave_application.leave_application.get_leave_balance_on",
-		// 	args: {
-		// 		employee: frm.doc.employee,
-		// 		date: frm.doc.from_date,
-		// 		to_date: frm.doc.to_date,
-		// 		leave_type: frm.doc.leave_type,
-		// 		consider_all_leaves_in_the_allocation_period: true
-		// 	},
-		// 	callback: function (r) {
-		// 		var data = r.message;
-		// 		if (data) {
+		console.log("Application_datasss",Application_data);
+		frappe.call({
+			method: "erpnext.hr.doctype.leave_application.leave_application.get_leave_balance_on",
+			args: {
+				employee: frm.doc.employee,
+				date: Application_data.from_date,
+				to_date: Application_data.to_date,
+				leave_type: frm.doc.leave_type,
+				consider_all_leaves_in_the_allocation_period: true
+			},
+			callback: function (r) {
+				var data = r.message;
+				if (data) {
 	
-		// 			var total_EL_balance = data;
-		// 			var total_leave_days = frm.doc.leave_days;
-		// 			var encashment_days = frm.doc.encashment_days;
-		// 			console.log("CHECK EL",total_EL_balance,total_leave_days,encashment_days);
-		// 			if (frm.doc.leave_type_name == 'Vacation Leave'){
+					var total_EL_balance = data;
+					var total_leave_days = frm.doc.leave_days;
+					var encashment_days = frm.doc.encashment_days;
+					console.log("CHECK EL",total_EL_balance,total_leave_days,encashment_days);
+					if (frm.doc.leave_type_name == 'Vacation Leave'){
 
-		// 				var vacation_leave_after_deduction_El_balance = total_EL_balance - total_leave_days / 2 - encashment_days;
+						var vacation_leave_after_deduction_El_balance = total_EL_balance - total_leave_days / 2 - encashment_days;
 	
-		// 				console.log(vacation_leave_after_deduction_El_balance);
+						console.log(vacation_leave_after_deduction_El_balance);
 	
-		// 				if (vacation_leave_after_deduction_El_balance <= 30) {
+						if (vacation_leave_after_deduction_El_balance <= 30) {
 	
-		// 					frappe.msgprint(__(" There is not enough Earned leave balance for Encashment."));
-		// 					frm.set_value("leave_encashment", "")
-		// 					frm.set_value("encashment_days", "");
-		// 					frm.toggle_display("encashment_days", false);
-		// 				}
+							frappe.msgprint(__(" There is not enough Earned leave balance for Encashment."));
+							frm.set_value("leave_encashment", "")
+							frm.set_value("encashment_days", "");
+							frm.toggle_display("encashment_days", false);
+						}
 	
-		// 			}else{
+					}else{
 	
-		// 				var other_leave_after_deduction_El_balance = total_EL_balance - encashment_days;
+						var other_leave_after_deduction_El_balance = total_EL_balance - encashment_days;
 	
-		// 				console.log(other_leave_after_deduction_El_balance);
+						console.log(other_leave_after_deduction_El_balance);
 	
-		// 				if (other_leave_after_deduction_El_balance <= 30) {
+						if (other_leave_after_deduction_El_balance <= 30) {
 	
-		// 					frappe.msgprint(__(" There is not enough Earned leave balance for Encashment."));
-		// 					frm.set_value("leave_encashment", "")
-		// 					frm.set_value("encashment_days", "");
-		// 					frm.toggle_display("encashment_days", false);
-		// 				}
+							frappe.msgprint(__(" There is not enough Earned leave balance for Encashment."));
+							frm.set_value("leave_encashment", "")
+							frm.set_value("encashment_days", "");
+							frm.toggle_display("encashment_days", false);
+						}
 	
-		// 			}
+					}
 	
-		// 		}
-		// 	}
-		// });
+				}
+			}
+		});
+	},
+
+	ltc_advance_amount:function(frm){
+		var advance_amount = frm.doc.ltc_advance_amount;
+
+		var ninety_percent_ltc_amount = advance_amount *90/100;
+
+		frm.set_value('ninety_percent_ltc_amount',ninety_percent_ltc_amount);
+
+		console.log(frm.doc.ninety_percent_ltc_amount)
 	},
 	
 });
 
 function get_application_details(name){
-    var data
-	return frappe.call({
-		"method": "frappe.client.get_value",
-		"args": {
+    var Leave_Application = [];
+	
+	frappe.call({
+		method: "frappe.client.get_value",
+		args: {
 			doctype: "Leave Application",
-			filters: [
-				["name", "=", name]
-			],
-			fieldname: ["from_date","to_date"]
+			filters: {
+				"name":name
+			},
+			fieldname: ["*"]
 		},
-		"callback": function (response) {
-			data = response.message;
-
-		}
+		async: false,
+		callback: function(r){
+	        Leave_Application=r.message;
+		} 
 	});
 
+    return Leave_Application;
 }
 
 function get_age(birth){
