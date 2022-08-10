@@ -708,13 +708,13 @@ function set_leave_authority(frm){
 					if(positions.length>0){
 						var emp_position = "";
 						var emp_department = "";
-						if(positions.indexOf("Associate Dean") !== -1){
-							emp_position = "Associate Dean";
-							emp_department = pd['Associate Dean'];
-						}else if(positions.indexOf("Dean") !== -1){
+						if(positions.indexOf("Dean") !== -1){
 							emp_position = "Dean";
 							emp_department = pd['Dean'];
-						}
+						}else if(positions.indexOf("Associate Dean") !== -1){
+							emp_position = "Associate Dean";
+							emp_department = pd['Associate Dean'];
+						} 
 						else if(positions.indexOf("Head of Department or School") !== -1){
 							emp_position = "Head of Department or School";
 							emp_department = pd['Head of Department or School'];

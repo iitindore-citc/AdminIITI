@@ -2,6 +2,7 @@
 // For license information, please see license.txt
 cur_frm.add_fetch('employee', 'employee_name', 'employee_name');
 frappe.ui.form.on('LTC Request', {
+	
 	refresh: function(frm) {
 		if (frm.is_new()) {
 			frm.trigger("calculate_total_days");
@@ -20,10 +21,24 @@ frappe.ui.form.on('LTC Request', {
 	},
 
 	onload: function(frm) {
+
+		if (!frm.is_new()) {
+			frm.set_df_property('status', 'options', ['Approved','Not Approved'])
+		}else{
+			frm.set_df_property('status', 'options', ['Open','Cancelled'])
+		}
 		
 		if (frm.doc.docstatus == 0 && frm.doc.employee) {
 			frm.trigger("employee_dependent_get");
 			frm.trigger("one_year_service");
+		}
+
+		cur_frm.fields_dict.leave_application.get_query = function(doc) {
+			return {
+				filters: {
+					status: 'Approved',
+				}
+			}
 		}
 	},
 
@@ -32,6 +47,15 @@ frappe.ui.form.on('LTC Request', {
 		frm.trigger("one_year_service");
 	},
 
+	leave_application:function(frm){
+
+		if(frm.doc.employee && frm.doc.leave_type_name){
+
+			set_approver(frm);
+
+		}
+
+	},
 	one_year_service:function(frm){
 		frappe.call({
 			"method": "frappe.client.get_value",
@@ -46,8 +70,6 @@ frappe.ui.form.on('LTC Request', {
 				var data = response.message;
 
 				var one_year_date = frappe.datetime.add_days(data.date_of_joining, 365)
-
-				console.log("one_year_date",one_year_date);
 
 				var current_date = frappe.datetime.nowdate();
 
@@ -75,7 +97,7 @@ frappe.ui.form.on('LTC Request', {
 			"callback": function (response) {
 				
 				var depended = response.message;
-				console.log(depended);
+				//console.log(depended);
 				if(depended.length >0){
 					cur_frm.clear_table('ltc_claimed');
 	
@@ -206,4 +228,127 @@ function get_age(birth){
 	//return years + " Year(s) " + age.getMonth() + " Month(s) " + age.getDate() + " Day(s)";
 	return years;
 
+}
+
+function set_approver(frm){
+	var employee = frm.doc.employee;
+	var leave_type_name = frm.doc.leave_type_name;
+
+	console.log(leave_type_name);
+	
+		frappe.call({
+			"method": "frappe.client.get_list",
+			"args": {
+				doctype: "Employee Position Details",
+				filters: [
+					["parent", "=", employee]
+				],
+				parent: 'Employee',
+				fields:["position","department"],
+			},
+			"async": false,
+			"callback": function (response) {
+				var position_data = response.message;
+				var positions = [];//create position array to check employee position
+				var pd = [];//create position array with department, position as a key and department as a value
+			
+				if (position_data.length>0){
+					position_data.forEach(function (item) {
+						positions.push(item.position);
+						pd[item.position] = item.department;
+					});//end foreach
+					//console.log(positions,pd);
+					if(positions.length>0){
+						var emp_position = "";
+						var emp_department = "";
+						if(positions.indexOf("Faculty Members") !== -1){
+							emp_position = "Faculty Members";
+							emp_department = pd['Faculty Members'];
+						}
+
+						var leave_authority = get_leave_authority(emp_position,leave_type_name);
+						var authority_count = Object.keys(leave_authority).length;
+						var fst_r_pos = "";
+						var snd_r_pos = "";
+						var thrd_r_pos = ""
+						var approver_pos = "";
+						if(authority_count){
+                            fst_r_pos = leave_authority.first_recommender;
+							snd_r_pos = leave_authority.second_recommender;
+							thrd_r_pos = leave_authority.third_recommender;
+							approver_pos = leave_authority.approver;
+						}else{
+							leave_authority = get_leave_authority(emp_position,"Other");
+
+							
+							if(Object.keys(leave_authority).length>0){
+								fst_r_pos = leave_authority.first_recommender;
+								snd_r_pos = leave_authority.second_recommender;
+								thrd_r_pos = leave_authority.third_recommender;
+								approver_pos = leave_authority.approver;
+							}
+						}
+
+						console.log("leave_authority",leave_authority)
+
+						console.log('first reco='+fst_r_pos);
+						console.log('second reco='+snd_r_pos);
+						console.log('third reco='+thrd_r_pos);
+						console.log('approver ='+approver_pos);
+
+
+						if(approver_pos){
+							var approver_pos_email = get_employee_detail(emp_department,approver_pos);
+							if(approver_pos_email){
+								cur_frm.set_value('approver',approver_pos_email);
+							}else{
+								cur_frm.set_value('approver','');
+							}
+						}else{
+							cur_frm.set_value('approver','');
+						}
+						
+					
+					}//end if position.length
+				}//end if positon_data.length
+			}
+		});
+}
+
+function get_leave_authority(position,leave_type){
+	var leave_authority = [];
+	frappe.call({
+		method: "frappe.client.get_value",
+		args: {
+			doctype: "Leave Authority",
+			filters: {
+				"position":position,
+				"leave_type":leave_type
+			},
+			fieldname: ["*"]
+		},
+		async: false,
+		callback: function(r){
+	        leave_authority=r.message;
+		} 
+	});
+    return leave_authority;
+}
+
+function get_employee_detail(department,position){
+    var email = "";
+	frappe.call({
+		method: "admin_iiti.overrides.get_employee_by_position",
+		async: false,
+		args: {
+			"department": department,
+			"position":position
+		},
+		callback: function (r) {
+		     if(r.message.length>0){
+                email = r.message[0].user_id;
+			 }
+		}
+	});
+	return email;
 }

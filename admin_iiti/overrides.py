@@ -397,7 +397,7 @@ def check_delegate(user):
 
 @frappe.whitelist()
 def get_employee_by_position(department,position):
-	if position=="HOD":
+	if position!="Director":
 		values = {'department': department,"position":position}
 		employee_postion_detail = frappe.db.sql("SELECT epd.*,e.user_id FROM `tabEmployee Position Details` as epd INNER JOIN `tabEmployee` as e on epd.parent=e.name WHERE epd.department=%(department)s and epd.position=%(position)s",values=values,as_dict=True)
 		return employee_postion_detail
