@@ -2,7 +2,9 @@
 # For license information, please see license.txt
 
 # import frappe
+import json
 from re import template
+from erpnext.hr.doctype.leave_application.leave_application import LeaveApplication
 import frappe
 from frappe.model.document import Document
 from frappe import _, as_json, utils
@@ -28,37 +30,35 @@ from frappe.utils import (
 class LTCRequest(Document):
 
 	def on_update(self):
-		#frappe.msgprint('main')
+		frappe.msgprint('main')
 		if self.status == "Open" and self.docstatus < 1:
 			# notify leave approver about creation
 			##if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
 			self.notify_leave_approver()
-		
-		share_doc_with_approver(self, self.approver)
+			share_doc_with_approver(self, self.approver)
 
 
 	def on_submit(self):
-		frappe.msgprint('main-submit')
+		##frappe.throw('main-submit')
 		if self.status == "Open":
 			frappe.throw(_("Only LTC Request Form  with status 'Approved' and 'Rejected' can be submitted"))
 
 		# self.validate_back_dated_application()
 		# self.update_attendance()
 
-		# notify leave applier about approval
-		#if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-		self.notify_employee()
+		#notify leave applier about approval
+		# if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
+		# 	self.notify_employee()
 		
 		if self.leave_type_name == 'Vacation Leave' and self.leave_encashment:
 			El_update(self)
 
 		#self.create_leave_ledger_entry()
-		self.reload()
+		#self.reload()
 
 	
 	def notify_employee(self):
 		employee = frappe.get_doc("Employee", self.employee)
-		frappe.throw(employee)
 		if not employee.user_id:
 			return
 
@@ -96,7 +96,7 @@ class LTCRequest(Document):
 			email_template = frappe.get_doc("Email Template", template)
 			message = frappe.render_template(email_template.response, args)
 
-			notify(self,{
+			self.notify({
 				# for post in messages
 				"message": message,
 				"message_to": self.approver,
@@ -104,7 +104,7 @@ class LTCRequest(Document):
 				"subject": email_template.subject
 			})
 
-def notify(self, args):
+	def notify(self, args):
 		args = frappe._dict(args)
 
 		contact = args.message_to
@@ -133,8 +133,14 @@ def notify(self, args):
 def El_update(self):
 
 	##vacation_leave_data = json.loads(leave_data)
+	LeaveApplication_data = frappe.db.get_value("Leave Application",self.leave_application,{"from_date","to_date"},as_dict=1)
 
-	El_balance = get_leave_balance_on()
+	# data = json.loads(LeaveApplication_data)
+
+	frappe.throw(LeaveApplication_data)
+
+
+	El_balance = get_leave_balance_on(self.employee,self.leave_type,LeaveApplication_data.from_date,LeaveApplication_data.to_date,consider_all_leaves_in_the_allocation_period =True)
 
 	frappe.throw(El_balance)
 
@@ -191,6 +197,7 @@ def El_update(self):
 
 @frappe.whitelist()
 def get_leave_balance_on(employee, leave_type, date, to_date=None, consider_all_leaves_in_the_allocation_period=False):
+	frappe.throw(date)
 	'''
 		Returns leave balance till date
 		:param employee: employee name
@@ -407,6 +414,7 @@ def get_holidays(employee, from_date, to_date, holiday_list = None):
 		and h2.name = %s""", (from_date, to_date, holiday_list))[0][0]
 
 	return holidays
+
 
 			
 
