@@ -23,15 +23,18 @@ frappe.ui.form.on('LTC Request', {
 	onload: function(frm) {
 
 		if (!frm.is_new()) {
-			frm.set_df_property('status', 'options', ['Approved','Not Approved'])
+
+	
+			//frm.set_df_property('status', 'options', ['Open','Approved','Not Approved'])
 		}else{
 			frm.set_df_property('status', 'options', ['Open','Cancelled'])
+			if (frm.doc.docstatus == 0 && frm.doc.employee) {
+				frm.trigger("employee_dependent_get");
+				frm.trigger("one_year_service");
+			}
 		}
 		
-		if (frm.doc.docstatus == 0 && frm.doc.employee) {
-			frm.trigger("employee_dependent_get");
-			frm.trigger("one_year_service");
-		}
+		
 
 		cur_frm.fields_dict.leave_application.get_query = function(doc) {
 			return {
@@ -345,6 +348,7 @@ function get_employee_detail(department,position){
 			"position":position
 		},
 		callback: function (r) {
+			console.log("r.message",r.message);
 		     if(r.message.length>0){
                 email = r.message[0].user_id;
 			 }

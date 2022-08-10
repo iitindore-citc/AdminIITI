@@ -396,9 +396,9 @@ def check_delegate(user):
 	return user
 
 @frappe.whitelist()
-def get_employee_by_position(department,position):
-	if position!="Director":
-		values = {'department': department,"position":position}
+def get_employee_by_position(emp_main_department,postion_department,position):
+	if position=="HOD":
+		values = {'department': emp_main_department,"position":position}
 		employee_postion_detail = frappe.db.sql("SELECT epd.*,e.user_id FROM `tabEmployee Position Details` as epd INNER JOIN `tabEmployee` as e on epd.parent=e.name WHERE epd.department=%(department)s and epd.position=%(position)s",values=values,as_dict=True)
 		return employee_postion_detail
 	else:
@@ -703,8 +703,8 @@ def set_leave_status(leave_application_name,action_type,total_recommender,recomm
 		
 	if action_type=='approved':
 		frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Approved'},update_modified=False)
-		if leave_type == 'Vacation Leave':
-			El_update(leave_data)
+		# if leave_type == 'Vacation Leave':
+		# 	El_update(leave_data)
 	
 	return action_type
 

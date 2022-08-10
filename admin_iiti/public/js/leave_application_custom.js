@@ -684,7 +684,8 @@ frappe.ui.form.on("Leave Application", {
 function set_leave_authority(frm){
 	var employee = frm.doc.employee;
 	var leave_type_name = frm.doc.leave_type_name;
-	
+    var emp_detail = get_emp_detail(employee);
+	var emp_main_department = emp_detail.department;
 		frappe.call({
 			"method": "frappe.client.get_list",
 			"args": {
@@ -708,16 +709,54 @@ function set_leave_authority(frm){
 					if(positions.length>0){
 						var emp_position = "";
 						var emp_department = "";
-						if(positions.indexOf("Dean") !== -1){
-							emp_position = "Dean";
-							emp_department = pd['Dean'];
-						}else if(positions.indexOf("Associate Dean") !== -1){
-							emp_position = "Associate Dean";
-							emp_department = pd['Associate Dean'];
+                         
+
+						if(positions.indexOf("DOFA") !== -1){
+							emp_position = "DOFA";
+							emp_department = pd['DOFA'];
+						}else if(positions.indexOf("DOSA") !== -1){
+							emp_position = "DOSA";
+							emp_department = pd['DOSA'];
+						}else if(positions.indexOf("DOIA") !== -1){
+							emp_position = "DOIA";
+							emp_department = pd['DOIA'];
+						}else if(positions.indexOf("DOAA") !== -1){
+							emp_position = "DOAA";
+							emp_department = pd['DOAA'];
+						}else if(positions.indexOf("DORD") !== -1){
+							emp_position = "DORD";
+							emp_department = pd['DORD'];
+						}else if(positions.indexOf("DOID") !== -1){
+							emp_position = "DOID";
+							emp_department = pd['DOID'];
+						}else if(positions.indexOf("DOA") !== -1){
+							emp_position = "DOA";
+							emp_department = pd['DOA'];
+						}else if(positions.indexOf("ACR") !== -1){
+							emp_position = "ACR";
+							emp_department = pd['ACR'];
+						}else if(positions.indexOf("ADOFA") !== -1){
+							emp_position = "ADOFA";
+							emp_department = pd['ADOFA'];
+						}else if(positions.indexOf("ADOSA") !== -1){
+							emp_position = "ADOSA";
+							emp_department = pd['ADOSA'];
+						}else if(positions.indexOf("ADOAA") !== -1){
+							emp_position = "ADOAA";
+							emp_department = pd['ADOAA'];
+						}else if(positions.indexOf("ADOID") !== -1){
+							emp_position = "ADOID";
+							emp_department = pd['ADOID'];
+						}else if(positions.indexOf("ADOA") !== -1){
+							emp_position = "ADOA";
+							emp_department = pd['ADOA'];
+						}else if(positions.indexOf("ADOIAO") !== -1){
+							emp_position = "ADOIAO";
+							emp_department = pd['ADOIAO'];
 						} 
-						else if(positions.indexOf("Head of Department or School") !== -1){
-							emp_position = "Head of Department or School";
-							emp_department = pd['Head of Department or School'];
+						else if(positions.indexOf("HOD") !== -1){
+							emp_position = "HOD";
+							emp_department = pd['HOD'];
 						}
 						else if(positions.indexOf("Faculty Members") !== -1){
 							emp_position = "Faculty Members";
@@ -744,14 +783,9 @@ function set_leave_authority(frm){
 								approver_pos = leave_authority.approver;
 							}
 						}
-
-						console.log('first reco='+fst_r_pos);
-						console.log('second reco='+snd_r_pos);
-						console.log('third reco='+thrd_r_pos);
-						console.log('approver ='+approver_pos);
 						
 						if(fst_r_pos){
-							var fst_r_pos_email = get_employee_detail(emp_department,fst_r_pos);
+							var fst_r_pos_email = get_employee_detail(emp_main_department,emp_department,fst_r_pos);
 							if(fst_r_pos_email){
 								cur_frm.set_value('leave_recommender',fst_r_pos_email);
 							}
@@ -760,7 +794,7 @@ function set_leave_authority(frm){
 						}
 						
 						if(snd_r_pos){
-							var snd_r_pos_email = get_employee_detail(emp_department,snd_r_pos);
+							var snd_r_pos_email = get_employee_detail(emp_main_department,emp_department,snd_r_pos);
 							if(snd_r_pos_email){
 								cur_frm.set_value('leave_recommender_second',snd_r_pos_email);
 							}else{
@@ -770,7 +804,7 @@ function set_leave_authority(frm){
 							cur_frm.set_value('leave_recommender_second','');
 						}
 						if(thrd_r_pos){
-							var thrd_r_pos_email = get_employee_detail(emp_department,thrd_r_pos);
+							var thrd_r_pos_email = get_employee_detail(emp_main_department,emp_department,thrd_r_pos);
 							if(thrd_r_pos_email){
 								cur_frm.set_value('leave_recommender_third',thrd_r_pos_email);
 							}else{
@@ -780,7 +814,7 @@ function set_leave_authority(frm){
 							cur_frm.set_value('leave_recommender_third','');
 						}
 						if(approver_pos){
-							var approver_pos_email = get_employee_detail(emp_department,approver_pos);
+							var approver_pos_email = get_employee_detail(emp_main_department,emp_department,approver_pos);
 							if(approver_pos_email){
 								cur_frm.set_value('leave_approver',approver_pos_email);
 							}else{
@@ -795,14 +829,15 @@ function set_leave_authority(frm){
 		});
 }
 
-function get_employee_detail(department,position){
+function get_employee_detail(emp_main_department,position_department,position){
     var email = "";
 	frappe.call({
 		method: "admin_iiti.overrides.get_employee_by_position",
 		async: false,
 		args: {
-			"department": department,
-			"position":position
+			"postion_department": position_department,
+			"position":position,
+			"emp_main_department":emp_main_department
 		},
 		callback: function (r) {
 		     if(r.message.length>0){
@@ -813,14 +848,14 @@ function get_employee_detail(department,position){
 	return email;
 }
 
-function get_leave_authority(position,leave_type){
+function get_leave_authority(emp_position,leave_type){
 	var leave_authority = [];
 	frappe.call({
 		method: "frappe.client.get_value",
 		args: {
 			doctype: "Leave Authority",
 			filters: {
-				"position":position,
+				"position":emp_position,
 				"leave_type":leave_type
 			},
 			fieldname: ["*"]
@@ -831,6 +866,25 @@ function get_leave_authority(position,leave_type){
 		} 
 	});
     return leave_authority;
+}
+
+function get_emp_detail(employee){
+	var emp_detail = [];
+	frappe.call({
+		method: "frappe.client.get_value",
+		args: {
+			doctype: "Employee",
+			filters: {
+				"name":employee,
+			},
+			fieldname: ["*"]
+		},
+		async: false,
+		callback: function(r){
+	        emp_detail=r.message;
+		} 
+	});
+    return emp_detail;
 }
 
 function change_leave_status(frm,leave_application_name,action_type,total_recommender){
