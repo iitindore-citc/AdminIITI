@@ -1,6 +1,11 @@
 cur_frm.add_fetch('leave_type', 'leave_type', 'leave_type_name');
 frappe.ui.form.on("Leave Application", {
 	refresh:function(frm){
+
+		frm.add_custom_button(__("LTC Request"),function(){
+			LTC(frm)
+			
+		});
 		
 	},
 	from_date: function(frm){
@@ -46,73 +51,12 @@ frappe.ui.form.on("Leave Application", {
 			frm.trigger("half_day_datepicker");
 			frm.trigger("calculate_total_days");
 			frm.trigger("get_leave_balance_for_check");
+			frm.trigger("check_EOL");
 		}
 		
 	},
 	//end show alert message for number of taken leave is not greater than allocated leave 
 
-	leave_encashment:function(frm){
-
-		// if (frm.doc.total_leave_days <= 10) {
-
-		// 	frappe.msgprint(__("You have to take maximum of 10 days for leave encashment."));
-		// }
-
-		if (frm.doc.leave_encashment) {
-			frm.toggle_display("encashment_days", true);
-			frm.trigger("check_El_Balance");
-		}
-	},
-	check_El_Balance:function(frm){
-		console.log(frm.doc.total_leave_days);
-		frappe.call({
-			method: "admin_iiti.overrides.Get_EL_Balance",
-			args: {
-				employee: frm.doc.employee,
-			},
-			callback: function (r) {
-				var data = r.message;
-				if (data) {
-	
-					var total_EL_balance = data;
-					var total_leave_days = frm.doc.total_leave_days;
-					var encashment_days = frm.doc.encashment_days;
-					//console.log(T_EL,total_leave_days);
-					if (frm.doc.leave_type_name == 'Vacation Leave') {
-	
-	
-						var vacation_leave_after_deduction_El_balance = total_EL_balance - total_leave_days / 2 - encashment_days;
-	
-						console.log(vacation_leave_after_deduction_El_balance);
-	
-						if (vacation_leave_after_deduction_El_balance <= 30) {
-	
-							frappe.msgprint(__(" There is not enough Earned leave balance for Encashment."));
-							frm.set_value("leave_encashment", "")
-							frm.set_value("encashment_days", "");
-							frm.toggle_display("encashment_days", false);
-						}
-	
-					}else{
-	
-						var other_leave_after_deduction_El_balance = total_EL_balance - encashment_days;
-	
-						console.log(other_leave_after_deduction_El_balance);
-	
-						if (other_leave_after_deduction_El_balance <= 30) {
-	
-							frappe.msgprint(__(" There is not enough Earned leave balance for Encashment."));
-							frm.set_value("leave_encashment", "")
-							frm.set_value("encashment_days", "");
-							frm.toggle_display("encashment_days", false);
-						}
-	
-					}
-	
-				}
-			}
-		});
-	},
 
 	get_leave_balance_for_check: function(frm) {
 		
@@ -146,14 +90,6 @@ frappe.ui.form.on("Leave Application", {
 
 					if(frm.doc.leave_type_name == "Vacation Leave"){
 
-						//check 10 maximun leave take for vaction leave 
-
-						// if(leave_days < 10){
-
-						// 	frappe.msgprint(__("You have to take maximum of 10 days for vacation leave."));
-						// }
-
-						//end validation
 
 						// check Leave dates between vacation period 
 
@@ -467,84 +403,20 @@ frappe.ui.form.on("Leave Application", {
 				}			
 	},
 
-	ltc_leave:function(frm){
+	// ltc_leave:function(frm){
 
-		if(frm.doc.leave_type && frm.doc.employee && frm.doc.from_date && frm.doc.to_date){
+	// 	if(frm.doc.leave_type && frm.doc.employee && frm.doc.from_date && frm.doc.to_date){
 
-			if(frm.doc.ltc_leave){
+	// 		if(frm.doc.ltc_leave){
 				
-				frm.trigger('one_year_service');
-				frm.trigger('employee_dependent_get');
+	// 			frm.trigger('one_year_service');
+	// 			frm.trigger('employee_dependent_get');
 
-			}
-		}
+	// 		}
+	// 	}
 
-	},
-	one_year_service:function(frm){
-		frappe.call({
-			"method": "frappe.client.get_value",
-			"args": {
-				doctype: "Employee",
-				filters: [
-					["name", "=", frm.doc.employee]
-				],
-				fieldname: "date_of_joining"
-			},
-			"callback": function (response) {
-				var data = response.message;
-
-				var one_year_date = frappe.datetime.add_days(data.date_of_joining, 365)
-
-				console.log("one_year_date",one_year_date);
-
-				var current_date = frappe.datetime.nowdate();
-
-				if (one_year_date > current_date) {
-
-					frappe.msgprint(__("After One Year Services Than you Can Applied LTC."));
-
-				}
-			}
-		});
-	},
-	employee_dependent_get:function(frm){
-
-		frappe.call({
-			"method": "frappe.client.get_list",
-			"args": {
-				doctype: "Employee Dependent Details",
-				filters: [
-					["parent", "=", frm.doc.employee]
-				],
-				parent: 'Employee',
-				fields:['dependent_name','date_of_birth','relation']
-			},
-			
-			"callback": function (response) {
-				
-				var depended = response.message;
-				console.log(depended);
-				if(depended.length >0){
-					cur_frm.clear_table('ltc_claimed');
+	// },
 	
-					depended.forEach(function (item) {
-						var age = get_age(item.date_of_birth);
-		
-						var child = cur_frm.add_child('ltc_claimed');
-						frappe.model.set_value(child.doctype, child.name, 'family_members', item.dependent_name);
-						frappe.model.set_value(child.doctype, child.name, 'age', age);
-						frappe.model.set_value(child.doctype, child.name, 'relationship', item.relation);
-				
-					});
-				}else{
-					cur_frm.clear_table('ltc_claimed');
-				}
-				
-				cur_frm.refresh_field('ltc_claimed');
-	
-			}
-		});
-	},
 	leave_type:function(frm){
 		if(frm.doc.leave_type == 'Casual Leave'){
 			frm.toggle_display("half_day",true);
@@ -677,6 +549,59 @@ frappe.ui.form.on("Leave Application", {
 		frm.set_value('ninety_percent_ltc_amount',ninety_percent_ltc_amount);
 
 		console.log(frm.doc.ninety_percent_ltc_amount)
+	},
+	check_EOL:function(frm){
+		console.log(frm.doc.leave_type_name);
+		if(frm.doc.from_date && frm.doc.to_date){
+			//if(frm.doc.leave_type_name == 'Extra Ordinary Leave'){
+				frappe.call({
+					method: 'erpnext.hr.doctype.leave_application.leave_application.get_number_of_leave_days',
+					args: {
+						"employee": employee,
+						"leave_type": leave_type,
+						"from_date": from_date,
+						"to_date": to_date
+					},
+					callback: function(r) {
+						if (r && r.message) {
+							var leave_days = r.message;
+							if(leave_days >= '180'){
+								frm.trigger('one_year_service');
+								// medical certificate upload
+							}
+							
+						}
+					}
+				});
+
+			//}
+		}
+	},
+	one_year_service:function(frm){
+		frappe.call({
+			"method": "frappe.client.get_value",
+			"args": {
+				doctype: "Employee",
+				filters: [
+					["name", "=", frm.doc.employee]
+				],
+				fieldname: "date_of_joining"
+			},
+			"callback": function (response) {
+				var data = response.message;
+
+				var one_year_date = frappe.datetime.add_days(data.date_of_joining, 365)
+
+				var current_date = frappe.datetime.nowdate();
+
+				if (one_year_date > current_date) {
+
+					frappe.msgprint(__("You not eligible For this Leave."));
+					frm.set_value("employee", "")
+
+				}
+			}
+		});
 	},
 })
 
@@ -887,12 +812,29 @@ function get_emp_detail(employee){
     return emp_detail;
 }
 
+function total_leave_days_get(from_date,to_date,employee,leave_type){
+
+	if (from_date && to_date && employee && leave_type) {
+
+		var leave_days ;
+		// server call is done to include holidays in leave days calculations
+		
+
+		//console.log("leave_daysssssss",leave_days);
+
+		//return leave_days;
+
+		
+		
+	}
+}
+
 function change_leave_status(frm,leave_application_name,action_type,total_recommender){
 
 	var recommender_first = 0;
 	var recommender_second = 0;
 	var recommender_third = 0;
-
+	
 	if(frm.doc.leave_recommender){
 		var delegate_1 = check_delegate(frm.doc.leave_recommender);
 		//check delegate if exist
@@ -1101,5 +1043,12 @@ function check_suffix(frm,holiday_list,from_date,to_date){
 			}
 		}
 	});
+
+}
+
+function LTC(){
+
+	document = frappe.new_doc("LTC Request");
+	frappe.set_route("Form","LTC Request",document.name);
 
 }

@@ -24,8 +24,26 @@ frappe.ui.form.on('LTC Request', {
 
 		if (!frm.is_new()) {
 
-	
-			//frm.set_df_property('status', 'options', ['Open','Approved','Not Approved'])
+			if(frappe.session.user == frm.doc.approver){
+				frm.set_df_property('status', 'options', ['Open','Approved','Not Approved'])
+			}else{
+				//from after save all from filed read only  set
+				cur_frm.set_df_property("leave_application","read_only",1);
+				cur_frm.set_df_property("department","read_only",1);
+				cur_frm.set_df_property("specify_whether","read_only",1);
+				cur_frm.set_df_property("departure_date","read_only",1);
+				cur_frm.set_df_property("destination","read_only",1);
+				cur_frm.set_df_property("arrival_date","read_only",1);
+				cur_frm.set_df_property("mode_of_travel","read_only",1);
+				cur_frm.set_df_property("nearest_railway","read_only",1);
+				cur_frm.set_df_property("leave_encashment","read_only",1);
+				cur_frm.set_df_property("ltc_claimed","read_only",1);
+				cur_frm.set_df_property("approver","read_only",1);
+				cur_frm.set_df_property("undertake_a","read_only",1);
+				cur_frm.set_df_property("undertake_b","read_only",1);
+				frm.set_df_property('status', 'options', ['Open','Cancelled'])
+			}
+			
 		}else{
 			frm.set_df_property('status', 'options', ['Open','Cancelled'])
 			if (frm.doc.docstatus == 0 && frm.doc.employee) {
@@ -33,9 +51,6 @@ frappe.ui.form.on('LTC Request', {
 				frm.trigger("one_year_service");
 			}
 		}
-		
-		
-
 		cur_frm.fields_dict.leave_application.get_query = function(doc) {
 			return {
 				filters: {
@@ -52,12 +67,41 @@ frappe.ui.form.on('LTC Request', {
 
 	leave_application:function(frm){
 
+		if(frm.doc.leave_application){
+
+			frm.trigger("get_leave_application");
+		}
+		
 		if(frm.doc.employee && frm.doc.leave_type_name){
 
 			set_approver(frm);
 
 		}
 
+	},
+	get_leave_application:function(frm){
+		frappe.call({
+			"method": "frappe.client.get_value",
+			"args": {
+				doctype: "LTC Request",
+				filters: [
+					["leave_application", "=", frm.doc.leave_application]
+				],
+				fieldname: "name"
+			},
+			"callback": function (response) {
+				var data = response.message;
+
+				console.log(data);
+
+				if (data.name) {
+
+					frappe.msgprint(__("You already Applied LTC Request for this Leave Application"));
+					frm.set_value("leave_application", "")
+
+				}
+			}
+		});
 	},
 	one_year_service:function(frm){
 		frappe.call({
@@ -124,8 +168,9 @@ frappe.ui.form.on('LTC Request', {
 	},
 
 	leave_encashment:function(frm){
-
+		
 		if (frm.doc.leave_encashment && frm.doc.leave_application) {
+			frm.trigger("check_applied_ltc");
 			frm.toggle_display("encashment_days", true);
 			frm.trigger("check_El_Balance");
 		}else{
@@ -143,7 +188,7 @@ frappe.ui.form.on('LTC Request', {
 				employee: frm.doc.employee,
 				date: Application_data.from_date,
 				to_date: Application_data.to_date,
-				leave_type: frm.doc.leave_type,
+				leave_type: 'Earned Leave',
 				consider_all_leaves_in_the_allocation_period: true
 			},
 			callback: function (r) {
@@ -198,6 +243,33 @@ frappe.ui.form.on('LTC Request', {
 
 		console.log(frm.doc.ninety_percent_ltc_amount)
 	},
+
+	check_applied_ltc:function(frm){
+
+		frappe.call({
+			method: "frappe.client.get_list",
+			args: {
+				doctype: "LTC Request",
+				filters: {
+					"employee":frm.doc.employee,
+					"docstatus":1,
+					"status":'Approved'
+				},
+				fieldname: ["*"]
+			},
+			async: false,
+			callback: function(r){
+				var Ltc_data =r.message;
+
+				if(Ltc_data.length >= 6){
+					frappe.msgprint("You Already Applied 6 time Enchasmnt in a service")
+					frm.set_value("leave_encashment", "")
+					frm.set_value("encashment_days", "");
+					frm.toggle_display("encashment_days", false);
+				}
+			} 
+		});
+	}
 	
 });
 
@@ -236,6 +308,7 @@ function get_age(birth){
 function set_approver(frm){
 	var employee = frm.doc.employee;
 	var leave_type_name = frm.doc.leave_type_name;
+	var emp_main_department =frm.doc.department;
 
 	console.log(leave_type_name);
 	
@@ -301,7 +374,7 @@ function set_approver(frm){
 
 
 						if(approver_pos){
-							var approver_pos_email = get_employee_detail(emp_department,approver_pos);
+							var approver_pos_email = get_employee_detail(emp_main_department,emp_department,approver_pos);
 							if(approver_pos_email){
 								cur_frm.set_value('approver',approver_pos_email);
 							}else{
@@ -338,14 +411,15 @@ function get_leave_authority(position,leave_type){
     return leave_authority;
 }
 
-function get_employee_detail(department,position){
+function get_employee_detail(emp_main_department,position_department,position){
     var email = "";
 	frappe.call({
 		method: "admin_iiti.overrides.get_employee_by_position",
 		async: false,
 		args: {
-			"department": department,
-			"position":position
+			"postion_department": position_department,
+			"position":position,
+			"emp_main_department":emp_main_department
 		},
 		callback: function (r) {
 			console.log("r.message",r.message);

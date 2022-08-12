@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 
 # import frappe
+from datetime import datetime
 import json
 from re import template
 from erpnext.hr.doctype.leave_application.leave_application import LeaveApplication
@@ -12,6 +13,7 @@ from erpnext.hr.utils import (
 	share_doc_with_approver
 	
 )
+import math
 from erpnext.hr.doctype.employee.employee import get_holiday_list_for_employee
 from frappe.utils import (
 	cint,
@@ -48,13 +50,13 @@ class LTCRequest(Document):
 
 		#notify leave applier about approval
 		# if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-		# 	self.notify_employee()
+		self.notify_employee()
 		
-		if self.leave_type_name == 'Vacation Leave' and self.leave_encashment:
+		if self.leave_encashment:
 			El_update(self)
 
 		#self.create_leave_ledger_entry()
-		#self.reload()
+		self.reload()
 
 	
 	def notify_employee(self):
@@ -66,7 +68,7 @@ class LTCRequest(Document):
 		args = parent_doc.as_dict()
 
 		#template = frappe.db.get_single_value('HR Settings', 'leave_status_notification_template')
-		template = 'LTC Request Notification'
+		template = 'LTC Request Status Notification'
 		if not template:
 			frappe.msgprint(_("Please set default template for Leave Status Notification in HR Settings."))
 			return
@@ -132,72 +134,61 @@ class LTCRequest(Document):
 
 def El_update(self):
 
-	##vacation_leave_data = json.loads(leave_data)
-	LeaveApplication_data = frappe.db.get_value("Leave Application",self.leave_application,{"from_date","to_date"},as_dict=1)
-
-	# data = json.loads(LeaveApplication_data)
-
-	frappe.throw(LeaveApplication_data)
+	
+	leave_type_name = 'Earned Leave'
 
 
-	El_balance = get_leave_balance_on(self.employee,self.leave_type,LeaveApplication_data.from_date,LeaveApplication_data.to_date,consider_all_leaves_in_the_allocation_period =True)
+	El_balance = get_leave_balance_on(self.employee,leave_type_name,self.leave_from_date,self.leave_to_date,consider_all_leaves_in_the_allocation_period =True)
 
-	frappe.throw(El_balance)
+	LeaveApplication_data = frappe.db.get_value("Leave Application",{"name":self.leave_application},["employee","total_leave_days"],as_dict=True)
 
-	##El_balance = frappe.db.get_value("Leave Allocation",{"employee":vacation_leave_data['employee'],"leave_type_name": 'Earned Leave'},"total_leaves_allocated",as_dict=1)
+	#El_balance = frappe.db.get_value("Leave Allocation",{"employee":self.employee,"leave_type_name": 'Earned Leave'},"total_leaves_allocated",as_dict=1)
 
-	##frappe.throw(frappe.as_json(vacation_leave_data))
-
-	##add_number_of_days = vacation_leave_data['total_leave_days']/2
-
-	##new_to_date = add_days(vacation_leave_data['from_date'],add_number_of_days)
-
-	##frappe.throw(add_number_of_days)
 
 	#:p EL Leave application Create
 
-	# El = frappe.new_doc("Leave Application")
-	# El.employee = vacation_leave_data['employee']
-	# El.employee_name = vacation_leave_data['employee_name']
-	# El.leave_type = 'Earned Leave'
-	# El.department = vacation_leave_data['department']
-	# El.leave_balance = El_balance.total_leaves_allocated
-	# El.from_date = vacation_leave_data['from_date']
-	# El.to_date = vacation_leave_data['to_date']
-	# El.total_leave_days = vacation_leave_data['total_leave_days']/2
-	# El.status ='Approved'
-	# El.leave_type_name = 'Earned Leave'
-	# El.flags.ignore_validate = True
-	# El.flags.ignore_permissions = 1
-	# El.docstatus = 1
-	# El.db_insert()
+	El = frappe.new_doc("Leave Application")
+	El.employee = self.employee
+	El.employee_name = self.employee_name
+	El.leave_type = 'Earned Leave'
+	El.department = self.department
+	El.leave_balance = El_balance
+	El.from_date = self.leave_from_date
+	El.to_date = self.leave_to_date
+	El.total_leave_days = math.ceil(LeaveApplication_data.total_leave_days/2)
+	El.status ='Approved'
+	El.leave_type_name = 'Earned Leave'
+	El.flags.ignore_validate = True
+	El.flags.ignore_permissions = 1
+	El.docstatus = 1
+	##frappe.throw(frappe.as_json(El))
+	El.db_insert()
 
-	# El_application = frappe.get_last_doc('Leave Application')
+	El_application = frappe.get_last_doc('Leave Application')
 
-	# new_El_balance  = vacation_leave_data['total_leave_days']/2
+	new_El_balance  = math.ceil(LeaveApplication_data.total_leave_days/2)
 
-	# if El_application:
-	# 	doc = frappe.new_doc("Leave Ledger Entry")
-	# 	doc.employee = vacation_leave_data['employee']
-	# 	doc.employee_name = vacation_leave_data['employee_name']
-	# 	doc.leave_type = 'Earned Leave'
-	# 	doc.transaction_type = 'Leave Application'
-	# 	doc.transaction_name = El_application.name
-	# 	doc.leaves = new_El_balance * -1
-	# 	doc.company = 'IITI'
-	# 	doc.from_date = vacation_leave_data['from_date']
-	# 	doc.to_date =vacation_leave_data['to_date']
-	# 	doc.holiday_list=get_holiday_list_for_employee(vacation_leave_data['employee'], raise_exception=True) or ''
-	# 	doc.flags.ignore_validate = True
-	# 	doc.flags.ignore_permissions = 1
-	# 	doc.docstatus = 1
-	# 	##frappe.throw(frappe.as_json(doc))
-	# 	doc.db_insert()
+	if El_application:
+		doc = frappe.new_doc("Leave Ledger Entry")
+		doc.employee = self.employee
+		doc.employee_name = self.employee_name
+		doc.leave_type = 'Earned Leave'
+		doc.transaction_type = 'Leave Application'
+		doc.transaction_name = El_application.name
+		doc.leaves = new_El_balance * -1
+		doc.company = 'IITI'
+		doc.from_date = self.leave_from_date
+		doc.to_date =self.leave_to_date
+		doc.holiday_list=get_holiday_list_for_employee(self.employee, raise_exception=True) or ''
+		doc.flags.ignore_validate = True
+		doc.flags.ignore_permissions = 1
+		doc.docstatus = 1
+		##frappe.throw(frappe.as_json(doc))
+		doc.db_insert()
 
 
 @frappe.whitelist()
 def get_leave_balance_on(employee, leave_type, date, to_date=None, consider_all_leaves_in_the_allocation_period=False):
-	frappe.throw(date)
 	'''
 		Returns leave balance till date
 		:param employee: employee name
