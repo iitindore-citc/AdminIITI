@@ -31,16 +31,17 @@ frappe.ui.form.on('Employee Joining Report', {
 				},
 			}
 		}
-
-		var employee = frm.doc.employee;
-		var employee_detail = get_emp_detail();
-		var department = employee_detail.department;
-	    var leave_approver = get_employee_hod(department,'HOD','HOD');
-		cur_frm.set_value('approver',leave_approver);
+        if(frm.doc.employee!=''){
+			var employee = frm.doc.employee;
+			var employee_detail = get_emp_detail(employee);
+			var department = employee_detail.department;
+			var leave_approver = get_employee_hod(department,'HOD','HOD');
+			cur_frm.set_value('approver',leave_approver);
+		}
 	},
 	employee:function(frm){
 		var employee = frm.doc.employee;
-		var employee_detail = get_emp_detail();
+		var employee_detail = get_emp_detail(employee);
 		var department = employee_detail.department;
 	    var leave_approver = get_employee_hod(department,'HOD','HOD');
 		cur_frm.set_value('approver',leave_approver);

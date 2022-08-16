@@ -553,7 +553,7 @@ frappe.ui.form.on("Leave Application", {
 	check_EOL:function(frm){
 		console.log(frm.doc.leave_type_name);
 		if(frm.doc.from_date && frm.doc.to_date){
-			//if(frm.doc.leave_type_name == 'Extra Ordinary Leave'){
+			if(frm.doc.leave_type_name == 'Extra Ordinary Leave'){
 				frappe.call({
 					method: 'erpnext.hr.doctype.leave_application.leave_application.get_number_of_leave_days',
 					args: {
@@ -568,13 +568,13 @@ frappe.ui.form.on("Leave Application", {
 							if(leave_days >= '180'){
 								frm.trigger('one_year_service');
 								// medical certificate upload
+								frm.toggle_display("medical_certificate",true);
 							}
-							
 						}
 					}
 				});
 
-			//}
+			}
 		}
 	},
 	one_year_service:function(frm){
@@ -598,6 +598,7 @@ frappe.ui.form.on("Leave Application", {
 
 					frappe.msgprint(__("You not eligible For this Leave."));
 					frm.set_value("employee", "")
+					frm.toggle_display("medical_certificate",false);
 
 				}
 			}
