@@ -493,6 +493,11 @@ def get_leave_recommender_third(employee):
 
 	return leave_recommender
 
+@frappe.whitelist()
+def get_approvers(doctype, txt, searchfield, start, page_len, filters):
+	approvers = frappe.db.sql("""select u.name,u.first_name,u.last_name from `tabUser` u INNER JOIN `tabEmployee` e ON u.name = e.user_id""")
+	return set(tuple(approver) for approver in approvers)
+
 def RH_leave_date_check(self):
 	holiday_list_type = frappe.db.sql("""select l_p.optional_holiday_list from `tabLeave Policy Assignment` l_p_a INNER JOIN `tabLeave Period` l_p ON l_p.name = l_p_a.leave_period where l_p_a.employee=%s and l_p_a.docstatus = 1""",
 	 		(self.employee))
