@@ -135,12 +135,11 @@ doc_events ={
 
 scheduler_events = {
 
-    # "cron":{
-    #     "* * *":[
-    #         "admin_iiti.assign_leave_task.cron"
-    #     ]
-
-    # },
+    "cron":{
+        "* * *":[
+            "frappe.email.queue.flush",
+        ]
+    },
 	"all": [
 		"admin_iiti.tasks.all"
 	],

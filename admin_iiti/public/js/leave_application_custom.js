@@ -8,6 +8,13 @@ frappe.ui.form.on("Leave Application", {
 		});
 		
 	},
+	setup: function(frm) {
+		frm.set_query("leave_approver", function() {
+			return {
+				query: "admin_iiti.overrides.get_approvers",
+			};
+		});
+	},
 	from_date: function(frm){
 		   //set to date is not less than from date
 		   var from_date = new Date(frm.doc.from_date);
@@ -59,7 +66,6 @@ frappe.ui.form.on("Leave Application", {
 
 
 	get_leave_balance_for_check: function(frm) {
-		
 		if (frm.doc.docstatus === 0 && frm.doc.employee && frm.doc.leave_type && frm.doc.from_date && frm.doc.to_date) {
 			return frappe.call({
 				method: "erpnext.hr.doctype.leave_application.leave_application.get_leave_balance_on",
@@ -193,8 +199,6 @@ frappe.ui.form.on("Leave Application", {
 			if (!frm.is_new()) {
 				frm.toggle_display("status", true);
 				frm.set_df_property('status', 'options', ['Open','Rejected'])
-
-				
 
 				//Delegate condition check for employee leave recommender
 
@@ -539,16 +543,6 @@ frappe.ui.form.on("Leave Application", {
 			});
 
 		}
-	},
-
-	advance_amount:function(frm){
-		var advance_amount = frm.doc.advance_amount;
-
-		var ninety_percent_ltc_amount = advance_amount *90/100;
-
-		frm.set_value('ninety_percent_ltc_amount',ninety_percent_ltc_amount);
-
-		console.log(frm.doc.ninety_percent_ltc_amount)
 	},
 	check_EOL:function(frm){
 		console.log(frm.doc.leave_type_name);
@@ -1006,7 +1000,7 @@ function check_prefix(frm,holiday_list,from_date,to_date){
 			var data = r.message;
 			if(data.length == 0){
 
-				frappe.msgprint("You Can not check Prefix Leave day");
+				frappe.msgprint("Prefix leaves dates are incorrect.");
 				frm.set_value('prefix_leave_date','');
 				frm.set_value('prefix_from_date','');
 				frm.set_value('prefix_to_date','');
@@ -1036,7 +1030,7 @@ function check_suffix(frm,holiday_list,from_date,to_date){
 			var data = r.message;
 			if(data.length == 0){
 
-				frappe.msgprint("You Can not check suffix Leave day");
+				frappe.msgprint("Suffix leaves dates are incorrect.");
 				frm.set_value('suffix_leave_date','');
 				frm.set_value('suffix_from_date','');
 				frm.set_value('suffix_to_date','');
