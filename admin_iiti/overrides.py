@@ -41,7 +41,7 @@ class CustomLeaveApplication(Document):
 	
 	def on_update(self):
 		#frappe.throw(frappe.as_json(self))
-		frappe.msgprint('custom')
+		#frappe.msgprint('custom')
 		leave_approver = self.leave_approver
 		leave_recommendor = self.leave_recommender
 		leave_recommender_second = self.leave_recommender_second
@@ -185,7 +185,7 @@ class CustomLeaveApplication(Document):
 					notify_leave_approver(self)
 
 	def on_submit(self):
-		frappe.msgprint('custom-submit')
+		#frappe.msgprint('custom-submit')
 		if self.status == "Open":
 			frappe.throw(_("Only Leave Applications with status 'Approved' and 'Rejected' can be submitted"))
 
