@@ -110,7 +110,7 @@ frappe.ui.form.on("Leave Application", {
 	},
 
 	check_vacation_period:function(frm){
-
+		
 		frappe.call({
 			method: "frappe.client.get_value",
 			args: {
@@ -165,12 +165,12 @@ frappe.ui.form.on("Leave Application", {
 			// this is used to html template code render for  leave application dashborad call 
 			$("div").remove(".form-dashboard-section.custom");
 			var data = leave_details
-			var template = '{% if not jQuery.isEmptyObject(data) %}<table class="table table-bordered small"><thead><tr><th style="width: 16%">{{ __("Leave Type") }}</th><th style="width: 16%" class="text-right">{{ __("Total Leave Creadited") }}</th><th style="width: 16%" class="text-right">{{ __("Leave Lapsed") }}</th><th style="width: 16%" class="text-right">{{ __("Leave Availed") }}</th><th style="width: 16%" class="text-right">{{ __("Pending Leave") }}</th><th style="width: 16%" class="text-right">{{ __("Leave Balance") }}</th></tr></thead><tbody>{% for(const [key, value] of Object.entries(data)) { %}<tr><td> {%= key %} </td><td class="text-right"> {%= value["total_leaves"] %} </td><td class="text-right"> {%= value["expired_leaves"] %} </td><td class="text-right"> {%= value["leaves_taken"] %} </td><td class="text-right"> {%= value["pending_leaves"] %} </td><td class="text-right"> {%= value["remaining_leaves"] %} </td></tr>{% } %}</tbody></table>{% else %}<p style="margin-top: 30px;"> No Leave has been allocated. </p>{% endif %}'
+			var template = '{% if not jQuery.isEmptyObject(data) %}<table class="table table-bordered small"><thead><tr><th style="width: 16%">{{ __("Leave Type") }}</th><th style="width: 16%" class="text-right">{{ __("Total Leave Credited") }}</th><th style="width: 16%" class="text-right">{{ __("Leave Lapsed") }}</th><th style="width: 16%" class="text-right">{{ __("Leave Availed") }}</th><th style="width: 16%" class="text-right">{{ __("Pending Leave") }}</th><th style="width: 16%" class="text-right">{{ __("Leave Balance") }}</th></tr></thead><tbody>{% for(const [key, value] of Object.entries(data)) { %}<tr><td> {%= key %} </td><td class="text-right"> {%= value["total_leaves"] %} </td><td class="text-right"> {%= value["expired_leaves"] %} </td><td class="text-right"> {%= value["leaves_taken"] %} </td><td class="text-right"> {%= value["pending_leaves"] %} </td><td class="text-right"> {%= value["remaining_leaves"] %} </td></tr>{% } %}</tbody></table>{% else %}<p style="margin-top: 30px;"> No Leave has been allocated. </p>{% endif %}'
 			frm.dashboard.add_section(
 				frappe.render_template(template, {
 					data: leave_details
 				}),
-				__("Allocated Leaves")
+				__("Balanced Leave")
 			);
 			frm.dashboard.show();
 			let allowed_leave_types = Object.keys(leave_details);

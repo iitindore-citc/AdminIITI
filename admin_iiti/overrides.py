@@ -104,7 +104,6 @@ class CustomLeaveApplication(Document):
 
 		#if total recommender 2, then the doc share to the two recommender 
 		elif self.total_recommender == 2:
-
 			if self.recommender_first and self.recommender_second:
 				#if all two recommender are  recommended  the status is set Recommended 
 				frappe.db.set_value("Leave Application", self.name, 'status', 'Recommended',update_modified=False)
