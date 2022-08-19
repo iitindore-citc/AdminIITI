@@ -6,7 +6,16 @@ frappe.ui.form.on("Leave Application", {
 			LTC(frm)
 			
 		});
-		
+		document.querySelectorAll("[data-fieldname='submit_form']")[1].style.backgroundColor="rgb(36 144 239)";
+		document.querySelectorAll("[data-fieldname='submit_form']")[1].style.color="white";
+		document.querySelectorAll("[data-fieldname='submit_form']")[1].style.float="right";
+	},
+	submit_form:function(frm){
+		if(frm.doc.status=='Open' || frm.doc.status=='Recommended'){
+			cur_frm.save();
+		}else if(frm.doc.status=='Rejected' || frm.doc.status=='Approved' || frm.doc.status=='Cancelled'){
+			cur_frm.savesubmit();
+		}
 	},
 	setup: function(frm) {
 		frm.set_query("leave_approver", function() {
