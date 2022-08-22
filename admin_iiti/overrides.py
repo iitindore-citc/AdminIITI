@@ -633,6 +633,15 @@ def leave_type_validation(doc,method):
 
 	## End Cl leave validation
 
+	##P:start Extra Ordinary Leave condition
+
+	if doc.leave_type_name == 'Extra Ordinary Leave':
+		if doc.total_leave_days >= 180:
+			service_check(doc.employee,doc.leave_type_name)
+
+	##P:End Extra Ordinary Leave condition
+
+
 
 # total recommeder count function 
 def after_insert_recommeder(doc,method):
@@ -777,3 +786,16 @@ def El_update(leave_data):
 		doc.docstatus = 1
 		##frappe.throw(frappe.as_json(doc))
 		doc.db_insert()
+
+def service_check(employee,leave_type_name):
+
+	data = frappe.db.get_value("Employee",{"employee":employee},"date_of_joining",as_dict=1)
+
+	frappe.throw(data.date_of_joining)
+	current_date = frappe.datetime.nowdate()
+
+	if leave_type_name == 'Extra Ordinary Leave':
+		one_year_date = frappe.datetime.add_days(data.date_of_joining, 365)
+		if one_year_date > current_date:
+			frappe.msgprint("You not eligible For this Leave.")
+	

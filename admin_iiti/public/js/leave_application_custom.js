@@ -209,7 +209,19 @@ frappe.ui.form.on("Leave Application", {
 			//set_button_color();
 			if (!frm.is_new()) {
 				frm.toggle_display("status", true);
-				frm.set_df_property('status', 'options', ['Open','Rejected'])
+				console.log(frappe);
+				if(frappe.session.user==frm.doc.owner){
+					if(frm.doc.status=='Recommended'){
+						frm.set_df_property('status', 'options', ['Open','Recommended'])
+					}else if(frm.doc.status=='Rejected'){
+						frm.set_df_property('status', 'options', ['Open','Rejected'])
+					}else if(frm.doc.status=='Approved'){
+						frm.set_df_property('status', 'options', ['Open','Approved'])
+					}else{
+						frm.set_df_property('status', 'options', ['Open','Cancelled'])
+					}
+				}
+				
 
 				//Delegate condition check for employee leave recommender
 
@@ -231,7 +243,7 @@ frappe.ui.form.on("Leave Application", {
 					
 					if(Delegate_to == frappe.session.user || frm.doc.leave_recommender==frappe.session.user){
 						frm.toggle_display("recommender_first",true);
-						frm.toggle_display("submit_frm", false);
+						frm.toggle_display("submit_form", false);
 						if(frm.doc.recommender_first==1){
 							frm.toggle_display("recommended_", true);
 							frm.toggle_display("not_recommonded", false);
@@ -270,7 +282,7 @@ frappe.ui.form.on("Leave Application", {
 
 					if(Delegate_to && Delegate_to == frappe.session.user || frm.doc.leave_recommender_second == frappe.session.user){
 						frm.toggle_display("recommender_second",true);
-						frm.toggle_display("submit_frm", false);
+						frm.toggle_display("submit_form", false);
 						if(frm.doc.recommender_second==1){
 							frm.toggle_display("recommended_", true);
 							frm.toggle_display("not_recommonded", false);
@@ -308,7 +320,7 @@ frappe.ui.form.on("Leave Application", {
 
 					if(Delegate_to && Delegate_to == frappe.session.user || frm.doc.leave_recommender_third == frappe.session.user){
 						frm.toggle_display("recommender_third",true);
-						frm.toggle_display("submit_frm", false);
+						frm.toggle_display("submit_form", false);
 						if(frm.doc.recommender_third==1){
 							frm.toggle_display("recommended_", true);
 							frm.toggle_display("not_recommonded", false);
@@ -345,7 +357,7 @@ frappe.ui.form.on("Leave Application", {
 					});
 
 					if(Delegate_to == frappe.session.user || frm.doc.leave_approver == frappe.session.user){
-						frm.toggle_display("submit_frm", false);
+						frm.toggle_display("submit_form", false);
 						if(frm.doc.status=="Approved"){
 							frm.toggle_display("approved", true);
 							frm.toggle_display("not_approved", false);
