@@ -51,137 +51,140 @@ class CustomLeaveApplication(Document):
 		leave_delegate_recommender_second = check_delegate(self.leave_recommender_second)
 		leave_delegate_recommender_third = check_delegate(self.leave_recommender_third)
 		leave_delegate_approver = check_delegate(self.leave_approver)
-        
 		#if total recommender 3, then the doc share to the three recommender 
-		if self.total_recommender == 3:
-			if self.recommender_first and self.recommender_second and self.recommender_third:
-				#if all three recommender are  recommended the status is set Recommended  
-				frappe.db.set_value("Leave Application", self.name, 'status', 'Recommended',update_modified=False)
-				if leave_delegate_approver!='':
-					share_doc_with_approver(self, leave_approver)
-					share_doc_with_approver(self,leave_delegate_approver)
-					if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-						notify_leave_approver(self)
-						notify_leave_email(self,leave_delegate_approver)
-				else:
-					share_doc_with_approver(self, leave_approver)
-					if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-						notify_leave_approver(self)
-				
-			elif self.recommender_first and self.recommender_second:
-				if leave_delegate_recommender_third!="":
-					share_doc_with_recommender(self, leave_delegate_recommender_third)
-					share_doc_with_recommender(self, leave_recommender_third)
-					if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-						notify_leave_email(self,leave_delegate_recommender_third)
-						notify_leave_email(self,leave_recommender_third)
-				else:
-					share_doc_with_recommender(self, leave_recommender_third)
-					if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-						notify_leave_email(self,leave_recommender_third)
-			elif self.recommender_first:
-				if leave_delegate_recommender_second!="":
-					share_doc_with_recommender(self, leave_delegate_recommender_second)
-					share_doc_with_recommender(self, leave_recommender_second)
-					if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-						notify_leave_email(self,leave_delegate_recommender_second)
-						notify_leave_email(self,leave_recommender_second)
-				else:
-					share_doc_with_recommender(self, leave_recommender_second)
-					if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-						notify_leave_email(self,leave_recommender_second)
-			else:
-				if leave_delegate_recommendor!="":
-					share_doc_with_recommender(self, leave_delegate_recommendor)
-					share_doc_with_recommender(self, leave_recommendor)
-					if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-						notify_leave_email(self,leave_delegate_recommendor)
-						notify_leave_email(self,leave_recommendor)
-				else:
-					share_doc_with_recommender(self, leave_recommendor)
-					if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-						notify_leave_email(self,leave_recommendor)
-
-		#if total recommender 2, then the doc share to the two recommender 
-		elif self.total_recommender == 2:
-			if self.recommender_first and self.recommender_second:
-				#if all two recommender are  recommended  the status is set Recommended 
-				frappe.db.set_value("Leave Application", self.name, 'status', 'Recommended',update_modified=False)
-				if leave_delegate_approver!='':
-					share_doc_with_approver(self, leave_approver)
-					share_doc_with_approver(self,leave_delegate_approver)
-					if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-						notify_leave_approver(self)
-						notify_leave_email(self,leave_delegate_approver)
-				else:
-					share_doc_with_approver(self, leave_approver)
-					if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-						notify_leave_approver(self)
-			elif self.recommender_first:
-				if leave_delegate_recommender_second!="":
-					share_doc_with_recommender(self, leave_delegate_recommender_second)
-					share_doc_with_recommender(self, leave_recommender_second)
-					if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-						notify_leave_email(self,leave_delegate_recommender_second)
-						notify_leave_email(self,leave_recommender_second)
-				else:
-					share_doc_with_recommender(self, leave_recommender_second)
-					if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-						notify_leave_email(self,leave_recommender_second)
-			else:
-				if leave_delegate_recommendor!="":
-					share_doc_with_recommender(self, leave_delegate_recommendor)
-					share_doc_with_recommender(self, leave_recommendor)
-					if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-						notify_leave_email(self,leave_delegate_recommendor)
-						notify_leave_email(self,leave_recommendor)
-				else:
-					share_doc_with_recommender(self, leave_recommendor)
-					if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-						notify_leave_email(self,leave_recommendor)
-		#if total recommender one, then the doc share to the one recommender 
-		elif self.total_recommender == 1:
-			if self.recommender_first:
-				#if all one recommender are recommended the status is set Recommended 
-				frappe.db.set_value("Leave Application", self.name, 'status', 'Recommended',update_modified=False)
-				if leave_delegate_approver!='':
-					share_doc_with_approver(self, leave_approver)
-					share_doc_with_approver(self,leave_delegate_approver)
-					if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-						notify_leave_approver(self)
-						notify_leave_email(self,leave_delegate_approver)
-				else:
-					share_doc_with_approver(self, leave_approver)
-					if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-						notify_leave_approver(self)
-			else:
-				if leave_delegate_recommendor!="":
-					share_doc_with_recommender(self, leave_delegate_recommendor)
-					share_doc_with_recommender(self, leave_recommendor)
-					if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-						notify_leave_email(self,leave_delegate_recommendor)
-						notify_leave_email(self,leave_recommendor)
-				else:
-					share_doc_with_recommender(self, leave_recommendor)
-					if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-						notify_leave_email(self,leave_recommendor)
-
-		elif self.total_recommender == 0:
-			if self.status == "Open" and self.docstatus < 1:
-				if leave_delegate_approver!='':
-					share_doc_with_approver(self, leave_approver)
-					share_doc_with_approver(self,leave_delegate_approver)
-					if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-						notify_leave_approver(self)
-						notify_leave_email(self,leave_delegate_approver)
-				else:
+		if self.status!='Approved':
+			if self.total_recommender == 3:
+				frappe.throw('recommender 3')
+				if self.recommender_first and self.recommender_second and self.recommender_third:
+					#if all three recommender are  recommended the status is set Recommended 
+					frappe.db.set_value("Leave Application", self.name, 'status', 'Recommended',update_modified=False)
+					if leave_delegate_approver!='':
+						share_doc_with_approver(self, leave_approver)
+						share_doc_with_approver(self,leave_delegate_approver)
+						if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
+							notify_leave_approver(self)
+							notify_leave_email(self,leave_delegate_approver)
+					else:
 						share_doc_with_approver(self, leave_approver)
 						if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
 							notify_leave_approver(self)
-			else:
-				share_doc_with_approver(self, leave_approver)
-				if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
-					notify_leave_approver(self)
+							
+				elif self.recommender_first and self.recommender_second:
+					if leave_delegate_recommender_third!="":
+						share_doc_with_recommender(self, leave_delegate_recommender_third)
+						share_doc_with_recommender(self, leave_recommender_third)
+						if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
+							notify_leave_email(self,leave_delegate_recommender_third)
+							notify_leave_email(self,leave_recommender_third)
+					else:
+						share_doc_with_recommender(self, leave_recommender_third)
+						if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
+							notify_leave_email(self,leave_recommender_third)
+				elif self.recommender_first:
+					if leave_delegate_recommender_second!="":
+						share_doc_with_recommender(self, leave_delegate_recommender_second)
+						share_doc_with_recommender(self, leave_recommender_second)
+						if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
+							notify_leave_email(self,leave_delegate_recommender_second)
+							notify_leave_email(self,leave_recommender_second)
+					else:
+						share_doc_with_recommender(self, leave_recommender_second)
+						if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
+							notify_leave_email(self,leave_recommender_second)
+				else:
+					if leave_delegate_recommendor!="":
+						share_doc_with_recommender(self, leave_delegate_recommendor)
+						share_doc_with_recommender(self, leave_recommendor)
+						if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
+							notify_leave_email(self,leave_delegate_recommendor)
+							notify_leave_email(self,leave_recommendor)
+					else:
+						share_doc_with_recommender(self, leave_recommendor)
+						if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
+							notify_leave_email(self,leave_recommendor)
+
+		#if total recommender 2, then the doc share to the two recommender 
+			elif self.total_recommender == 2:
+				if self.recommender_first and self.recommender_second:
+					#if all two recommender are  recommended  the status is set Recommended 
+					frappe.db.set_value("Leave Application", self.name, 'status', 'Recommended',update_modified=False)
+					if leave_delegate_approver!='':
+						share_doc_with_approver(self, leave_approver)
+						share_doc_with_approver(self,leave_delegate_approver)
+						if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
+							notify_leave_approver(self)
+							notify_leave_email(self,leave_delegate_approver)
+					else:
+						share_doc_with_approver(self, leave_approver)
+						if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
+							notify_leave_approver(self)
+				elif self.recommender_first:
+					if leave_delegate_recommender_second!="":
+						share_doc_with_recommender(self, leave_delegate_recommender_second)
+						share_doc_with_recommender(self, leave_recommender_second)
+						if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
+							notify_leave_email(self,leave_delegate_recommender_second)
+							notify_leave_email(self,leave_recommender_second)
+					else:
+						share_doc_with_recommender(self, leave_recommender_second)
+						if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
+							notify_leave_email(self,leave_recommender_second)
+				else:
+					if leave_delegate_recommendor!="":
+						share_doc_with_recommender(self, leave_delegate_recommendor)
+						share_doc_with_recommender(self, leave_recommendor)
+						if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
+							notify_leave_email(self,leave_delegate_recommendor)
+							notify_leave_email(self,leave_recommendor)
+					else:
+						share_doc_with_recommender(self, leave_recommendor)
+						if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
+							notify_leave_email(self,leave_recommendor)
+			#if total recommender one, then the doc share to the one recommender 
+			elif self.total_recommender == 1:
+				if self.recommender_first:
+					#if all one recommender are recommended the status is set Recommended 
+					frappe.db.set_value("Leave Application", self.name, 'status', 'Recommended',update_modified=False)
+					if leave_delegate_approver!='':
+						share_doc_with_approver(self, leave_approver)
+						share_doc_with_approver(self,leave_delegate_approver)
+						if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
+							notify_leave_approver(self)
+							notify_leave_email(self,leave_delegate_approver)
+					else:
+						share_doc_with_approver(self, leave_approver)
+						if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
+							notify_leave_approver(self)
+				else:
+					if leave_delegate_recommendor!="":
+						share_doc_with_recommender(self, leave_delegate_recommendor)
+						share_doc_with_recommender(self, leave_recommendor)
+						if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
+							notify_leave_email(self,leave_delegate_recommendor)
+							notify_leave_email(self,leave_recommendor)
+					else:
+						share_doc_with_recommender(self, leave_recommendor)
+						if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
+							notify_leave_email(self,leave_recommendor)
+
+			elif self.total_recommender == 0:
+				if self.status == "Open" and self.docstatus < 1:
+					if leave_delegate_approver!='':
+						share_doc_with_approver(self, leave_approver)
+						share_doc_with_approver(self,leave_delegate_approver)
+						if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
+							notify_leave_approver(self)
+							notify_leave_email(self,leave_delegate_approver)
+					else:
+							share_doc_with_approver(self, leave_approver)
+							if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
+								notify_leave_approver(self)
+				else:
+					share_doc_with_approver(self, leave_approver)
+					if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
+						notify_leave_approver(self)
+		# else:
+		# 	frappe.throw('now approved')
 
 	def on_submit(self):
 		#frappe.msgprint('custom-submit')
@@ -689,23 +692,24 @@ def set_leave_status(leave_application_name,action_type,total_recommender,recomm
 	if action_type=='recommond':
 		if recommender_first=="1":
 			frappe.db.set_value("Leave Application",{'name':leave_application_name}, {'recommender_first': 1},update_modified=False)
-			if total_recommender=="1":
-				frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Recommended'},update_modified=False)
+			# if total_recommender=="1":
+			# 	frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Recommended'},update_modified=False)
 
 		if recommender_second=="1":
 			frappe.db.set_value("Leave Application",{'name':leave_application_name}, {'recommender_second': 1},update_modified=False)
-			if total_recommender=="2":
-				frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Recommended'},update_modified=False)
+			# if total_recommender=="2":
+			# 	frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Recommended'},update_modified=False)
 		
 		if recommender_third=="1":
 			frappe.db.set_value("Leave Application",{'name':leave_application_name}, {'recommender_third': 1},update_modified=False)
-			if total_recommender=="3":
-				frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Recommended'},update_modified=False)
+			# if total_recommender=="3":
+			# 	frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Recommended'},update_modified=False)
 	
 	if action_type=='not_recommond' or action_type=='not_approved':
 		frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Rejected'},update_modified=False)
 		
 	if action_type=='approved':
+		#pass
 		frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Approved'},update_modified=False)
 		# if leave_type == 'Vacation Leave':
 		# 	El_update(leave_data)

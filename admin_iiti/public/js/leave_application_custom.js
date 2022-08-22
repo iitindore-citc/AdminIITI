@@ -6,6 +6,7 @@ frappe.ui.form.on("Leave Application", {
 			LTC(frm)
 			
 		});
+		frm.disable_save();
 		document.querySelectorAll("[data-fieldname='submit_form']")[1].style.backgroundColor="rgb(36 144 239)";
 		document.querySelectorAll("[data-fieldname='submit_form']")[1].style.color="white";
 		document.querySelectorAll("[data-fieldname='submit_form']")[1].style.float="right";
@@ -67,7 +68,8 @@ frappe.ui.form.on("Leave Application", {
 			frm.trigger("half_day_datepicker");
 			frm.trigger("calculate_total_days");
 			frm.trigger("get_leave_balance_for_check");
-			frm.trigger("check_EOL");
+			var total_days = check_number_of_days(frm);
+			leave_type_validation_check(total_days,frm);
 		}
 		
 	},
@@ -119,7 +121,6 @@ frappe.ui.form.on("Leave Application", {
 	},
 
 	check_vacation_period:function(frm){
-		
 		frappe.call({
 			method: "frappe.client.get_value",
 			args: {
@@ -230,6 +231,7 @@ frappe.ui.form.on("Leave Application", {
 					
 					if(Delegate_to == frappe.session.user || frm.doc.leave_recommender==frappe.session.user){
 						frm.toggle_display("recommender_first",true);
+						frm.toggle_display("submit_frm", false);
 						if(frm.doc.recommender_first==1){
 							frm.toggle_display("recommended_", true);
 							frm.toggle_display("not_recommonded", false);
@@ -268,6 +270,7 @@ frappe.ui.form.on("Leave Application", {
 
 					if(Delegate_to && Delegate_to == frappe.session.user || frm.doc.leave_recommender_second == frappe.session.user){
 						frm.toggle_display("recommender_second",true);
+						frm.toggle_display("submit_frm", false);
 						if(frm.doc.recommender_second==1){
 							frm.toggle_display("recommended_", true);
 							frm.toggle_display("not_recommonded", false);
@@ -305,6 +308,7 @@ frappe.ui.form.on("Leave Application", {
 
 					if(Delegate_to && Delegate_to == frappe.session.user || frm.doc.leave_recommender_third == frappe.session.user){
 						frm.toggle_display("recommender_third",true);
+						frm.toggle_display("submit_frm", false);
 						if(frm.doc.recommender_third==1){
 							frm.toggle_display("recommended_", true);
 							frm.toggle_display("not_recommonded", false);
@@ -341,6 +345,7 @@ frappe.ui.form.on("Leave Application", {
 					});
 
 					if(Delegate_to == frappe.session.user || frm.doc.leave_approver == frappe.session.user){
+						frm.toggle_display("submit_frm", false);
 						if(frm.doc.status=="Approved"){
 							frm.toggle_display("approved", true);
 							frm.toggle_display("not_approved", false);
@@ -554,33 +559,6 @@ frappe.ui.form.on("Leave Application", {
 
 		}
 	},
-	check_EOL:function(frm){
-		console.log(frm.doc.leave_type_name);
-		if(frm.doc.from_date && frm.doc.to_date){
-			if(frm.doc.leave_type_name == 'Extra Ordinary Leave'){
-				frappe.call({
-					method: 'erpnext.hr.doctype.leave_application.leave_application.get_number_of_leave_days',
-					args: {
-						"employee": employee,
-						"leave_type": leave_type,
-						"from_date": from_date,
-						"to_date": to_date
-					},
-					callback: function(r) {
-						if (r && r.message) {
-							var leave_days = r.message;
-							if(leave_days >= '180'){
-								frm.trigger('one_year_service');
-								// medical certificate upload
-								frm.toggle_display("medical_certificate",true);
-							}
-						}
-					}
-				});
-
-			}
-		}
-	},
 	one_year_service:function(frm){
 		frappe.call({
 			"method": "frappe.client.get_value",
@@ -608,7 +586,34 @@ frappe.ui.form.on("Leave Application", {
 			}
 		});
 	},
+
 })
+
+function check_number_of_days(frm){
+
+	if(frm.doc.employee && frm.doc.leave_type && frm.doc.to_date && frm.doc.from_date){
+
+		var total_days_count = "";
+		frappe.call({
+			"method": 'erpnext.hr.doctype.leave_application.leave_application.get_number_of_leave_days',
+			"args": {
+				"employee": frm.doc.employee,
+				"leave_type": frm.doc.leave_type,
+				"from_date": frm.doc.from_date,
+				"to_date": frm.doc.to_date
+			},
+			"async": false,
+			callback: function (r) {
+				if (r && r.message) {
+					total_days_count = r.message;
+
+				}
+			}
+		});
+		return total_days_count;
+
+	}
+}
 
 
 function set_leave_authority(frm){
@@ -1050,6 +1055,28 @@ function check_suffix(frm,holiday_list,from_date,to_date){
 	});
 
 }
+
+function leave_type_validation_check(total_days,frm){
+	if(total_days){
+		if(frm.doc.leave_type_name == 'Extra Ordinary Leave'){
+
+			if(total_days >= 180){
+				frm.trigger('one_year_service');
+				// medical certificate upload
+				frm.toggle_display("medical_certificate",true);
+			}
+		}else if(frm.doc.leave_type_name == 'Study Leave'){
+
+			if(total_days >= 365){
+
+				frappe.msgprint(__("you can take max of 12 months at a time in a study leave "));
+				frm.set_value("to_date", "")
+			}
+
+		}
+	}
+}
+
 
 function LTC(){
 
