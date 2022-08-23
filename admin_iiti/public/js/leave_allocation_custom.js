@@ -37,6 +37,10 @@ frappe.ui.form.on("Leave Allocation", {
                         var complate_date = frappe.datetime.add_days(data.date_of_joining, 1826.25)
     
                         console.log("complate_date",complate_date);
+                    }else if (frm.doc.leave_type_name == 'Sabbatical Leave'){
+
+                        //Sabbatical Leave can be availed by an employee with at least 6 years of service.
+                        var complate_date = frappe.datetime.add_days(data.date_of_joining, 2190)
                     }
                     
                     var current_date = frappe.datetime.nowdate();

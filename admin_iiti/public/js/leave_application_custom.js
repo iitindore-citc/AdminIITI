@@ -1091,8 +1091,6 @@ function leave_type_validation_check(total_days,frm){
 
 
 function LTC(){
-
 	document = frappe.new_doc("LTC Request");
 	frappe.set_route("Form","LTC Request",document.name);
-
 }

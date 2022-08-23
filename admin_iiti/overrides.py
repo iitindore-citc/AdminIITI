@@ -1,5 +1,7 @@
 from itertools import count
 from re import S
+import re
+from time import strftime, strptime
 from warnings import filters
 from erpnext.hr.doctype.leave_application.leave_application import LeaveApplication
 from erpnext.hr.doctype.leave_ledger_entry.leave_ledger_entry import create_leave_ledger_entry
@@ -7,11 +9,10 @@ from erpnext.buying.doctype.supplier_scorecard.supplier_scorecard import dateran
 from erpnext.hr.doctype.employee.employee import get_holiday_list_for_employee
 import frappe
 import pandas as ps
+import pandas as pd
 import calendar
-import datetime
-from datetime import date
-from datetime import timedelta
 from frappe import as_json, utils
+from datetime import date, datetime, timedelta
 import json
 from frappe.model.document import Document
 
@@ -537,6 +538,7 @@ def recommended_validation(doc,method):
 
 def leave_type_validation(doc,method):
 
+
 	#recommended field filled validation
 	recommended_validation(doc,method)
 
@@ -635,11 +637,56 @@ def leave_type_validation(doc,method):
 
 	##P:start Extra Ordinary Leave condition
 
-	if doc.leave_type_name == 'Extra Ordinary Leave':
+	if doc.leave_type_name == "Extra Ordinary Leave":
 		if doc.total_leave_days >= 180:
+			#1 year service completed check
 			service_check(doc.employee,doc.leave_type_name)
 
-	##P:End Extra Ordinary Leave condition
+	##P:End Study Leave condition
+
+	if doc.leave_type_name == "Study Leave":
+
+		#5 year service completed check
+
+		service_check(doc.employee,doc.leave_type_name)
+
+		# total leave check 
+
+		leaves = frappe.get_all("Leave Application",
+		filters={
+			"employee": doc.employee,
+			"leave_type_name": 'Study Leave',
+			"status": "Approved",
+			"docstatus":1
+		},
+		fields=['SUM(total_leave_days) as leaves'])[0]
+
+		val =  leaves['leaves'] if leaves['leaves'] else 0.0
+
+		if val >= 730.001:
+			frappe.throw("You can not take study leave ,because maximum limit 24 month in entire services period.")
+
+
+	##P:End Study Leave condition
+
+	##P:start Sabbatical Leave condition
+
+	if doc.leave_type_name == "Sabbatical Leave":
+		#6 year service check 
+		service_check(doc.employee,doc.leave_type_name)
+		# at a time 1 year continous leave take
+		if doc.total_leave_days >= 365:
+			frappe.throw(" maximum limit 1 Year at a time.")
+
+		# only 3 time during the entire services
+
+		data = frappe.db.count("Leave Application",filters={"employee": doc.employee,"status": "Approved","leave_type_name":"Sabbatical Leave"})
+
+		if data >= 3:
+			frappe.throw("Not Exceeding three times during the entire services")
+		#frappe.throw(data)
+
+	##P:End Sabbatical Leave condition
 
 
 
@@ -789,13 +836,24 @@ def El_update(leave_data):
 
 def service_check(employee,leave_type_name):
 
-	data = frappe.db.get_value("Employee",{"employee":employee},"date_of_joining",as_dict=1)
 
-	frappe.throw(data.date_of_joining)
-	current_date = frappe.datetime.nowdate()
+	date_of_joining, relieving_date = frappe.db.get_value("Employee", employee, ["date_of_joining", "relieving_date"])
+
+	#date_of_join = json.dumps(date_of_joining,default=str)
+
+	formetdate = format(date_of_joining)
+	current_date = nowdate()
 
 	if leave_type_name == 'Extra Ordinary Leave':
-		one_year_date = frappe.datetime.add_days(data.date_of_joining, 365)
-		if one_year_date > current_date:
+		complete_date = add_days(formetdate, 365)
+
+	if leave_type_name == 'Study Leave':
+		complete_date = add_days(formetdate, 1826.25)
+	
+	if leave_type_name == "Sabbatical Leave":
+		complete_date = add_days(formetdate, 2190)
+
+	if complete_date > current_date:
 			frappe.msgprint("You not eligible For this Leave.")
+		
 	
