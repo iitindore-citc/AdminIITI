@@ -289,10 +289,26 @@ class CustomLeaveApplication(Document):
 		})
 
 	def create_leave_ledger_entry(self, submit=True):
+		# frappe.throw(self.leave_type_name)
 		if self.status != 'Approved' and submit:
 			frappe.throw(self.status)
 			return
-			
+
+		#p:leave ledger entry update for paternity leave 
+
+		if self.from_date:
+			current_date = self.from_date
+		else:
+			current_date = self.posting_date
+
+		if self.leave_type_name == 'Paternity Leave':
+
+			allocated_data = frappe.db.get_value("Leave Allocation",{"employee":self.employee,"leave_type_name":self.leave_type_name,'from_date':('<=',self.posting_date),'to_date':('>=', self.posting_date)},"name",as_dict=1)
+
+			frappe.db.set_value("Leave Ledger Entry", {'employee':self.employee,'transaction_type': 'Leave Allocation','transaction_name':allocated_data.name},{'is_expired': 1}, update_modified=False)
+		
+		#p:End ledger entry update for paternity leave
+
 		#expiry_date = get_allocation_expiry(self.employee, self.leave_type,
 			#self.to_date, self.from_date)
 
@@ -687,6 +703,49 @@ def leave_type_validation(doc,method):
 		#frappe.throw(data)
 
 	##P:End Sabbatical Leave condition
+
+	##P:start Maternity Leavecondition
+
+	if doc.leave_type_name == "Maternity Leave":
+		#180 days check 
+		if doc.total_leave_days >= 180:
+			frappe.throw("Period of not exceeding 180 days.")
+		
+	##P:End Maternity Leave condition
+
+	##P:start Paternity Leave condition
+
+	if doc.leave_type_name == "Paternity Leave":
+		#180 days check 
+		if doc.total_leave_days >= 15:
+			frappe.throw("Period of not exceeding 15 days.")
+		
+	##P:End Paternity Leave condition
+
+	##P:start Child Care Leave condition
+
+	if doc.leave_type_name == "Child Care Leave":
+		#180 days check 
+		if doc.total_leave_days >= 730:
+			frappe.throw("Allowed for 730 days in the entrire service.")
+		
+		# total leave check 
+
+		leaves = frappe.get_all("Leave Application",
+		filters={
+			"employee": doc.employee,
+			"leave_type_name": doc.leave_type_name,
+			"status": "Approved",
+			"docstatus":1
+		},
+		fields=['SUM(total_leave_days) as leaves'])[0]
+
+		val =  leaves['leaves'] if leaves['leaves'] else 0.0
+
+		if val >= 730:
+			frappe.throw("You can not take Child Care Leave ,because maximum limit 2 Year in entire services period.")
+		
+	##P:End Child Care Leave condition
 
 
 
