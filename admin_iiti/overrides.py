@@ -421,8 +421,8 @@ def get_employee_by_position(emp_main_department,postion_department,position):
 		employee_postion_detail = frappe.db.sql("SELECT epd.*,e.user_id FROM `tabEmployee Position Details` as epd INNER JOIN `tabEmployee` as e on epd.parent=e.name WHERE epd.department=%(department)s and epd.position=%(position)s",values=values,as_dict=True)
 		return employee_postion_detail
 	else:
-		values = {"position":position}
-		employee_postion_detail = frappe.db.sql("SELECT epd.*,e.user_id FROM `tabEmployee Position Details` as epd INNER JOIN `tabEmployee` as e on epd.parent=e.name WHERE epd.position=%(position)s",values=values,as_dict=True)
+		values = {"position":position,'department': emp_main_department}
+		employee_postion_detail = frappe.db.sql("SELECT epd.*,e.user_id FROM `tabEmployee Position Details` as epd INNER JOIN `tabEmployee` as e on epd.parent=e.name WHERE epd.position=%(position)s and epd.department=%(department)s ",values=values,as_dict=True)
 		return employee_postion_detail
 
 def notify_leave_approver(self):
@@ -804,6 +804,7 @@ def employeelistthird(doctype, txt, searchfield, start, page_len, filters):
 
 @frappe.whitelist()
 def set_leave_status(leave_application_name,action_type,total_recommender,recommender_first,recommender_second,recommender_third,leave_type,leave_data):
+	##frappe.throw(action_type)
 	if action_type=='recommond':
 		if recommender_first=="1":
 			frappe.db.set_value("Leave Application",{'name':leave_application_name}, {'recommender_first': 1},update_modified=False)
@@ -821,7 +822,10 @@ def set_leave_status(leave_application_name,action_type,total_recommender,recomm
 			# 	frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Recommended'},update_modified=False)
 	
 	if action_type=='not_recommond' or action_type=='not_approved':
-		frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Rejected'},update_modified=False)
+
+		frappe.db.set_value("Leave Application",{"name":leave_application_name}, {'status':'Rejected'}, update_modified=False)
+
+		##frappe.db.set_value("Leave Application",'HR-LAP-2022-00117','status','Rejected', update_modified=False)
 		
 	if action_type=='approved':
 		#pass

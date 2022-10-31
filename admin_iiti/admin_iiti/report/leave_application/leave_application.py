@@ -46,11 +46,23 @@ def update_available_serial_nos(available_serial_nos, sle):
 
 def get_columns():
 	columns = [
-		{"label": _("Employee Name"), "fieldname": "employee_name", "width": 200},
-		{"label": _("Status"), "fieldname": "status", "width": 200},
-		{"label": _("From Date"), "fieldname": "from_date", "width": 200},
-		{"label": _("Total Leave days"), "fieldname": "total_leave_days", "width": 200},
 		{"label": _("Name"), "fieldname": "name", "width": 200},
+		{"label": _("Employee Name"), "fieldname": "employee_name", "width": 100},
+		{"label": _("Status"), "fieldname": "status", "width": 100},
+		{"label": _("From Date"), "fieldname": "from_date", "width": 100},
+		{"label": _("To Date"), "fieldname": "to_date", "width": 100},
+		{"label": _("Total Leave days"), "fieldname": "total_leave_days", "width": 100},
+		{"label": _("Leave Type"), "fieldname": "leave_type", "width": 200},
+		{"label": _("Leave Balance"), "fieldname": "leave_balance", "width": 100},
+		{"label": _("Contact Number"), "fieldname": "contact_number", "width": 200},
+		{"label": _("Address"), "fieldname": "address", "width": 200},
+		{"label": _("leave recommender first"), "fieldname": "leave_recommender", "width": 150},
+		{"label": _("leave recommender second"), "fieldname": "leave_recommender_second", "width": 150},
+		{"label": _("leave recommender third"), "fieldname": "leave_recommender_third", "width": 150},
+		{"label": _("leave approver"), "fieldname": "leave_approver", "width": 150},
+
+
+		
 	]
 
 	return columns
@@ -59,22 +71,30 @@ def get_columns():
 ##stock entry sql add
 def get_leave_application(filters):
 	session_user = frappe.session.user
+	sle_conditions = ''
 	show_leave_condition = ''
 	show_leave_condition += " and (owner='"+frappe.session.user+"' OR leave_recommender='"+frappe.session.user+"' OR leave_approver='"+frappe.session.user+"')"
      
-	sl_entries = frappe.db.sql("""
-		SELECT
-	    *
-		FROM
-			`tabLeave Application` sle
-		WHERE
-			sle.name != " "
-				{sle_conditions}
-				{show_leave_condition}
-		ORDER BY
-			sle.posting_date asc, sle.creation asc
-		""".format(sle_conditions=get_sle_conditions(filters),show_leave_condition=show_leave_condition),
-		filters, as_dict=1)
+	# sl_entries = frappe.db.sql("""
+	# 	SELECT
+	# 		sle.employee_name,
+	# 		sle.status,
+	# 		sle.from_date
+	# 		sle.total_leave_days,
+	# 		sle.name
+	# 	FROM
+	# 		`tabLeave Application` sle
+	# 	WHERE
+	# 		sle.name != " "
+	# 			{sle_conditions}
+	# 			{show_leave_condition}
+	# 	ORDER BY
+	# 		sle.posting_date asc, sle.creation asc
+	# 	""".format(sle_conditions=get_sle_conditions(filters),show_leave_condition=show_leave_condition),
+	# 	filters, as_dict=1)
+
+
+	sl_entries = frappe.db.sql('select l_a.employee_name,l_a.name,l_a.status,l_a.from_date,l_a.total_leave_days,l_a.name,l_a.leave_type,l_a.leave_balance,l_a.to_date,l_a.contact_number,l_a.address,l_a.leave_recommender,l_a.leave_recommender_second,l_a.leave_recommender_third,l_a.leave_approver from `tabLeave Application` l_a  where l_a.docstatus = 1',as_dict=True)
 
 	return sl_entries
 

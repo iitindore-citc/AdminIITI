@@ -208,8 +208,16 @@ frappe.ui.form.on("Leave Application", {
 	onload: function(frm) {
 			//set_button_color();
 			if (!frm.is_new()) {
+
+				if(frm.doc.docstatus == 1){
+					frm.toggle_display("submit_form", false);
+				}
+
+				if(frm.doc.owner == frappe.session.user && frm.doc.docstatus == 0 ){
+					frm.toggle_display("submit_form", false);
+				}
+		
 				frm.toggle_display("status", true);
-				console.log(frappe);
 				if(frappe.session.user==frm.doc.owner){
 					if(frm.doc.status=='Recommended'){
 						frm.set_df_property('status', 'options', ['Open','Recommended'])
@@ -249,16 +257,20 @@ frappe.ui.form.on("Leave Application", {
 							frm.toggle_display("not_recommonded", false);
 				            cur_frm.set_df_property('recommended_','read_only',1);
 							document.querySelectorAll("[data-fieldname='recommended_']")[1].style.backgroundColor="#09cc09";
+							document.querySelectorAll("[data-fieldname='recommended_']")[1].style.color="#ffff";
 						}else if(frm.doc.status=="Rejected"){
 							frm.toggle_display("recommended_", false);
 							frm.toggle_display("not_recommonded", true);
 							cur_frm.set_df_property('not_recommonded','read_only',1);
 							document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.backgroundColor="#f73636";
+							document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.color="#ffff";
 						}else{
                             frm.toggle_display("recommended_", true);
 							frm.toggle_display("not_recommonded", true);
 							document.querySelectorAll("[data-fieldname='recommended_']")[1].style.backgroundColor="#2490ef";
 							document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.backgroundColor="#2490ef";
+							document.querySelectorAll("[data-fieldname='recommended_']")[1].style.color="#ffff";
+							document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.color="#ffff";
 						}
 					}
 				}
@@ -325,16 +337,19 @@ frappe.ui.form.on("Leave Application", {
 							frm.toggle_display("recommended_", true);
 							frm.toggle_display("not_recommonded", false);
 							document.querySelectorAll("[data-fieldname='recommended_']")[1].style.backgroundColor="#09cc09";
+							document.querySelectorAll("[data-fieldname='recommended_']")[1].style.color="#ffff";
 							document.querySelectorAll("[data-fieldname='recommended_']")[1].style.cursor="not-allowed";
 						}else if(frm.doc.status=="Rejected"){
 							frm.toggle_display("recommended_", false);
 							frm.toggle_display("not_recommonded", true);
 							document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.backgroundColor="#f73636";
+							document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.color="#ffff";
 							document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.cursor="not-allowed";
 						}else{
 							frm.toggle_display("recommended_", true);
 							frm.toggle_display("not_recommonded", true);
 							document.querySelectorAll("[data-fieldname='recommended_']")[1].style.backgroundColor="#2490ef";
+							document.querySelectorAll("[data-fieldname='recommended_']")[1].style.color="#ffff";
 							document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.backgroundColor="#2490ef";
 						}
 					}
@@ -362,19 +377,23 @@ frappe.ui.form.on("Leave Application", {
 							frm.toggle_display("approved", true);
 							frm.toggle_display("not_approved", false);
 							document.querySelectorAll("[data-fieldname='approved']")[1].style.backgroundColor="#09cc09";
+							document.querySelectorAll("[data-fieldname='approved']")[1].style.color="#f9fafa";
 							document.querySelectorAll("[data-fieldname='approved']")[1].style.cursor="not-allowed";
 
 						}else if(frm.doc.status=="Rejected"){
 							frm.toggle_display("approved", false);
 							frm.toggle_display("not_approved", true);
 							document.querySelectorAll("[data-fieldname='not_approved']")[1].style.backgroundColor="#f73636";
+							document.querySelectorAll("[data-fieldname='not_approved']")[1].style.color="#f9fafa";
 							document.querySelectorAll("[data-fieldname='not_approved']")[1].style.cursor="not-allowed";
 						}else{
 							//frm.toggle_display("recommender_third",true);
 							frm.toggle_display("approved", true);
 							frm.toggle_display("not_approved", true);
 							document.querySelectorAll("[data-fieldname='approved']")[1].style.backgroundColor="#2490ef";
+							document.querySelectorAll("[data-fieldname='approved']")[1].style.color="#f9fafa";
 							document.querySelectorAll("[data-fieldname='not_approved']")[1].style.backgroundColor="#2490ef";
+							document.querySelectorAll("[data-fieldname='not_approved']")[1].style.color="#f9fafa";
 						}
 						frm.set_df_property('status', 'options', ['Approved','Open','Recommended','Rejected','Cancelled'])
 					}
@@ -454,8 +473,9 @@ frappe.ui.form.on("Leave Application", {
 		}else{
 			frm.toggle_display("half_day",false);
 		}
-       
+		frm.trigger("calculate_total_days");
 		set_leave_authority(frm);
+		
 
 	},
 	foreign_leave:function(frm){
@@ -711,6 +731,7 @@ function set_leave_authority(frm){
 						}
 
 						var leave_authority = get_leave_authority(emp_position,leave_type_name);
+						
 						var authority_count = Object.keys(leave_authority).length;
 						var fst_r_pos = "";
 						var snd_r_pos = "";
@@ -796,23 +817,27 @@ function get_employee_detail(emp_main_department,position_department,position){
 }
 
 function get_leave_authority(emp_position,leave_type){
-	var leave_authority = [];
-	frappe.call({
-		method: "frappe.client.get_value",
-		args: {
-			doctype: "Leave Authority",
-			filters: {
-				"position":emp_position,
-				"leave_type":leave_type
+	if(emp_position && leave_type){
+
+		var leave_authority = [];
+		frappe.call({
+			method: "frappe.client.get_value",
+			args: {
+				doctype: "Leave Authority",
+				filters: {
+					"position": emp_position,
+					"leave_type": leave_type
+				},
+				fieldname: ["*"]
 			},
-			fieldname: ["*"]
-		},
-		async: false,
-		callback: function(r){
-	        leave_authority=r.message;
-		} 
-	});
-    return leave_authority;
+			async: false,
+			callback: function (r) {
+				leave_authority = r.message;
+			}
+		});
+		return leave_authority;
+
+	}
 }
 
 function get_emp_detail(employee){
@@ -924,6 +949,7 @@ function change_leave_status(frm,leave_application_name,action_type,total_recomm
 					frm.toggle_display("recommended_", true);
 					frm.toggle_display("not_recommonded", false);
 					document.querySelectorAll("[data-fieldname='recommended_']")[1].style.backgroundColor="#09cc09";
+					document.querySelectorAll("[data-fieldname='recommended_']")[1].style.color="#ffff";
 					document.querySelectorAll("[data-fieldname='recommended_']")[1].style.cursor="not-allowed";
 					cur_frm.save();
 				}else if(r.message=='not_recommond'){
@@ -931,12 +957,14 @@ function change_leave_status(frm,leave_application_name,action_type,total_recomm
 					frm.toggle_display("recommended_", false);
 					frm.toggle_display("not_recommonded", true);
 					document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.backgroundColor="#f73636";
+					document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.color="#ffff";
 					document.querySelectorAll("[data-fieldname='not_recommonded']")[1].style.cursor="not-allowed";
 					cur_frm.save();
 				}else if(r.message=='not_approved'){
 					frm.toggle_display("approved", false);
 					frm.toggle_display("not_approved", true);
 					document.querySelectorAll("[data-fieldname='not_approved']")[1].style.backgroundColor="#f73636";
+					document.querySelectorAll("[data-fieldname='not_approved']")[1].style.color="#ffff";
 					document.querySelectorAll("[data-fieldname='not_approved']")[1].style.cursor="not-allowed";
 					cur_frm.save();
 				}else if(r.message=='approved'){
@@ -944,6 +972,7 @@ function change_leave_status(frm,leave_application_name,action_type,total_recomm
 					frm.toggle_display("approved", true);
 					frm.toggle_display("not_approved", false);
 					document.querySelectorAll("[data-fieldname='approved']")[1].style.backgroundColor="#09cc09";
+					document.querySelectorAll("[data-fieldname='approved']")[1].style.color="#ffff";
 					document.querySelectorAll("[data-fieldname='approved']")[1].style.cursor="not-allowed";
 					cur_frm.savesubmit();
 					// frappe.call({

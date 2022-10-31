@@ -4,7 +4,7 @@ from warnings import filters
 from erpnext.hr.doctype.leave_application.leave_application import LeaveApplication
 from erpnext.hr.doctype.employee.employee import get_holiday_list_for_employee
 import frappe
-import pandas as ps
+# import pandas as ps
 import calendar
 import datetime
 from datetime import date
